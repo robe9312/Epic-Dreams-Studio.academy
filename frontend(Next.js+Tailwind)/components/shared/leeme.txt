@@ -1,0 +1,4 @@
+este directorio contiene:
+navar.tsx
+footer.tsx
+ui butons

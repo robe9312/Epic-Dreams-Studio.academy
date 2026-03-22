@@ -1,0 +1,3 @@
+este directorio contiene:
+supabaseClient.ts
+youtubeEmbed.ts

@@ -1,0 +1,4 @@
+este directorio contiene:
+timeline.tsx
+monitor.tsx
+aichat.tsx
