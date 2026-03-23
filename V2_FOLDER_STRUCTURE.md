@@ -1,6 +1,7 @@
 # Epic Dreams Studio Academy V2 - Folder Structure
 
 ## 🎭 Frontend (Next.js 15 + Tailwind + Zustand)
+
 - `app/` - Next.js App Router
   - `(auth)/` - Login/Registration
   - `(dashboard)/` - Main workbench layout
@@ -20,6 +21,7 @@
 - `services/` - API Clients (Supabase, Backend)
 
 ## 🐍 Backend (FastAPI + Python 3.12)
+
 - `app/`
   - `api/` - REST Endpoints
   - `agents/` - LangGraph Orchestration
@@ -34,5 +36,6 @@
 - `requirements.txt` - Python dependencies
 
 ## 🗄️ Database (Supabase)
+
 - `migrations/` - SQL versioning
 - `v2_schema.sql` - Core data model
