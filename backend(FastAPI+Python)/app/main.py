@@ -23,7 +23,11 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")  # NUEVO: token secreto para webhoo
 # --- Root endpoint ---
 @app.get("/")
 def home():
-    return {"status": "Online", "msg": "Epic Dreams Academy"}
+    return {
+        "status": "Online",
+        "msg": "Epic Dreams Academy API",
+        "webhook_endpoint": "/webhook"
+    }
 
 # --- verificar conectividad ---
 @app.get("/debug/dns")
@@ -130,20 +134,74 @@ async def procesar_update(update: dict):
     """
     Lógica principal del bot: responde a mensajes, maneja comandos, etc.
     """
-    # Si hay un mensaje de texto
-    if "message" in update:
-        chat_id = update["message"]["chat"]["id"]
-        text = update["message"].get("text", "")
-        first_name = update["message"]["from"].get("first_name", "Usuario")
+    if "message" not in update:
+        return
 
-        # Ejemplo: responder con eco (puedes personalizarlo)
-        respuesta = f"Hola {first_name}, dijiste: {text}"
+    message = update["message"]
+    chat_id = message["chat"]["id"]
+    text = message.get("text", "").strip()
+    first_name = message["from"].get("first_name", "Usuario")
 
-        # Enviar respuesta usando la función con reintentos
-        await telegram_api_call("sendMessage", json_data={
-            "chat_id": chat_id,
-            "text": respuesta
-        })
+    # Comando /start
+    if text.startswith("/start"):
+        respuesta = (
+            f"¡Hola {first_name}! 👋\n\n"
+            "Bienvenido al bot de Epic Dreams Academy.\n"
+            "Puedo ayudarte a gestionar tus archivos y contenido.\n\n"
+            "Comandos disponibles:\n"
+            "/start - Ver este mensaje\n"
+            "/upload - Información sobre subida de archivos\n"
+            "/status - Verificar estado del servidor"
+        )
+    # Comando /upload
+    elif text.startswith("/upload"):
+        respuesta = (
+            "Para subir archivos, envíamelos directamente por aquí (como documento) "
+            "o usa nuestra plataforma web: https://epic-dreams-studio-academy.hf.space"
+        )
+    # Comando /status
+    elif text.startswith("/status"):
+        respuesta = "✅ Servidor Epic Dreams Online y funcionando."
+    # Si recibimos un archivo
+    elif "document" in message:
+        file_name = message["document"].get("file_name", "archivo")
+        respuesta = f"He recibido tu archivo: *{file_name}*. Lo procesaremos en breve."
+    # Respuesta por defecto (Echo)
+    else:
+        respuesta = f"Recibido: {text}. Usa /start para ver las opciones."
+
+    # Enviar respuesta usando la función con reintentos
+    await telegram_api_call("sendMessage", json_data={
+        "chat_id": chat_id,
+        "text": respuesta,
+        "parse_mode": "Markdown"
+    })
+
+# --- Endpoint para activar el Webhook ---
+@app.get("/api/v1/telegram/set-webhook")
+async def set_webhook(request: Request):
+    """
+    Configura la URL de este Space como webhook en Telegram.
+    Llama a esto una vez después de desplegar.
+    """
+    # Detectar la URL base del Space dinámicamente o usar hardcoded si se prefiere
+    base_url = str(request.base_url).rstrip("/")
+    if "localhost" in base_url or "127.0.0.1" in base_url:
+        return {"error": "No se puede configurar webhook desde localhost. Despliega en HF primero."}
+
+    webhook_url = f"{base_url}/webhook"
+
+    # Llamar a setWebhook de Telegram
+    result = await telegram_api_call("setWebhook", json_data={
+        "url": webhook_url,
+        "secret_token": WEBHOOK_SECRET,
+        "allowed_updates": ["message"]
+    })
+
+    return {
+        "webhook_url": webhook_url,
+        "telegram_response": result
+    }
 
 @app.post("/webhook")
 async def telegram_webhook(
