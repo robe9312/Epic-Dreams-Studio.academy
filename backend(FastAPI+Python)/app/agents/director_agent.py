@@ -1,12 +1,14 @@
-from typing import TypedDict, Annotated, List
+from typing import TypedDict, Annotated, List, Dict, Any
 from langgraph.graph import StateGraph, END
 from app.agents.script_agent import ScriptAgent
 from app.agents.dp_agent import DPAgent
+from app.services.fountain_parser import parser
 
 class AgentState(TypedDict):
     """Estado compartido de la orquestación multi-agente."""
     idea: str
     script: str
+    parsed_script: List[Dict[str, Any]]
     shotlist: str
     feasibility_score: float
     feedback: str
@@ -44,6 +46,11 @@ class DirectorAgent:
         
         return {"feasibility_score": score, "feedback": feedback}
 
+    async def parse_script_node(self, state: AgentState):
+        """Nodo para estructurar el guion usando el formato Fountain."""
+        parsed = parser.parse(state["script"])
+        return {"parsed_script": parsed}
+
     def should_continue(self, state: AgentState):
         """Router: ¿Continuamos refinando o terminamos?"""
         if state["feasibility_score"] >= 85 or state["iterations"] >= 3:
@@ -58,6 +65,7 @@ class DirectorAgent:
         workflow.add_node("writer", self.write_script_node)
         workflow.add_node("dp", self.plan_cinematography_node)
         workflow.add_node("critic", self.critique_node)
+        workflow.add_node("parser", self.parse_script_node)
 
         # Definir bordes
         workflow.set_entry_point("writer")
@@ -70,8 +78,10 @@ class DirectorAgent:
             self.should_continue,
             {
                 "refine": "writer",
-                "end": END
+                "end": "parser"
             }
         )
+
+        workflow.add_edge("parser", END)
 
         return workflow.compile()

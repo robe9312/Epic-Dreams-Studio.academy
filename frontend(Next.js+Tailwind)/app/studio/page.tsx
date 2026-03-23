@@ -1,16 +1,63 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Timeline } from '@/components/Timeline';
 import { Canvas } from '@/components/Canvas';
 import { Inspector } from '@/components/Inspector';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTimelineStore } from '@/store/useTimelineStore';
 
 export default function StudioPage() {
+    const [prompt, setPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const { setTracks, addLog, setFeasibilityScore } = useTimelineStore();
+
+    const handleGenerate = async () => {
+        if (!prompt) return;
+        setIsGenerating(true);
+        addLog({ agent: 'Director Agent', message: `Orchestrating production for: "${prompt}"`, type: 'info' });
+        
+        try {
+            const response = await fetch('http://localhost:8000/api/v2/production/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                const sceneCount = result.data.parsed_script?.filter((item: any) => item.type === 'scene').length || 0;
+                addLog({ agent: 'Director Agent', message: `Production cycle complete. ${sceneCount} scenes identified and structured.`, type: 'success' });
+                addLog({ agent: 'DP Agent', message: 'Shot list and visual schemas integrated into timeline.', type: 'info' });
+                
+                setFeasibilityScore(result.data.score || 95);
+
+                // Use the first scene for the initial timeline population
+                const firstScene = result.data.parsed_script?.[0];
+                const scriptContent = firstScene ? `${firstScene.heading}\n${firstScene.content.map((c: any) => c.text || c.character).join(' ')}` : result.data.script;
+
+                const scriptClip = { id: 's1', track: 'narrative', content: scriptContent.substring(0, 150) + '...', startTime: 0, endTime: 10 };
+                const visualClip = { id: 'v1', track: 'visual', content: `Visuals for Scene: ${firstScene?.heading || 'Sequence 1'}`, startTime: 0, endTime: 10 };
+                
+                setTracks({
+                    narrative: [scriptClip],
+                    visual: [visualClip],
+                    technical: [],
+                    training: []
+                });
+            }
+        } catch (error) {
+            addLog({ agent: 'Director Agent', message: 'Orchestration failed. Check backend connectivity.', type: 'error' });
+            console.error('Generation failed:', error);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     return (
         <div className="h-screen w-screen bg-[#050505] text-white flex flex-col overflow-hidden font-sans selection:bg-red-500/30">
             {/* Minimalist Top Nav */}
-            <header className="h-12 border-b border-[#1a1a1a] flex items-center justify-between px-6 bg-[#080808]">
+            <header className="h-12 border-b border-[#1a1a1a] flex items-center justify-between px-6 bg-[#080808] z-50">
                 <div className="flex items-center space-x-4">
                     <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center font-bold text-[10px]">ED</div>
                     <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
@@ -28,9 +75,31 @@ export default function StudioPage() {
             </header>
 
             {/* Main Workbench Area */}
-            <main className="flex-1 flex overflow-hidden">
+            <main className="flex-1 flex overflow-hidden relative">
                 <Canvas />
                 <Inspector />
+
+                {/* Overlaid AI Prompt Bar */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-40">
+                    <div className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
+                        <input 
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="Describe your cinematic vision..."
+                            className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none placeholder:text-gray-600"
+                            onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+                        />
+                        <button 
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !prompt}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                isGenerating ? 'bg-gray-800 text-gray-500' : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20'
+                            }`}
+                        >
+                            {isGenerating ? 'Orchestrating...' : 'Run AI Studio'}
+                        </button>
+                    </div>
+                </div>
             </main>
 
             {/* Cinematic Timeline */}

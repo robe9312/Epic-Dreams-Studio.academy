@@ -1,9 +1,13 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import { useTimelineStore } from '@/store/useTimelineStore';
 
 export const Canvas: React.FC = () => {
+    const { playhead, tracks } = useTimelineStore();
+    
+    // Simple logic to find the active narrative clip
+    const activeClip = tracks.narrative.find(c => playhead >= c.startTime && playhead <= c.endTime);
+
     return (
         <div className="flex-1 bg-[#050505] flex items-center justify-center p-8 relative overflow-hidden group">
             {/* Grid background for "Workbench" feel */}
@@ -26,14 +30,33 @@ export const Canvas: React.FC = () => {
                     <span>4K | 16:9</span>
                 </div>
 
-                {/* Placeholder for Cinematic content */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex flex-col items-center space-y-4">
-                        <div className="w-12 h-12 border-2 border-red-500 rounded-full animate-pulse flex items-center justify-center">
-                           <div className="w-2 h-2 bg-red-500 rounded-full" />
-                        </div>
-                        <span className="text-white/20 font-bold tracking-tighter italic">WAITING FOR SCENE DATA...</span>
-                    </div>
+                {/* Content Area */}
+                <div className="absolute inset-0 flex items-center justify-center p-12 text-center">
+                    <AnimatePresence mode="wait">
+                        {activeClip ? (
+                            <motion.div 
+                                key={activeClip.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-4"
+                            >
+                                <span className="text-red-500 text-[10px] font-bold uppercase tracking-widest block mb-2">Narrative Core</span>
+                                <h2 className="text-2xl font-serif italic text-white/90 leading-tight">
+                                    {activeClip.content}
+                                </h2>
+                            </motion.div>
+                        ) : (
+                            <div className="flex flex-col items-center space-y-4">
+                                <div className="w-12 h-12 border-2 border-red-500 rounded-full animate-pulse flex items-center justify-center">
+                                   <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                </div>
+                                <span className="text-white/20 font-bold tracking-tighter italic uppercase text-[10px]">
+                                    {tracks.narrative.length > 0 ? 'Move Playhead to Review' : 'Waiting for Scene Data...'}
+                                </span>
+                            </div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </motion.div>
         </div>
