@@ -21,13 +21,11 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         run: |
-          # Extraemos el ID del proyecto de la URL (ej: https://abc.supabase.co -> abc)
-          PROJECT_ID=$(echo $SUPABASE_URL | sed -e 's/https:\/\///' -e 's/\.supabase\.co//')
+          # Extraemos el ID del proyecto de la URL de forma ROBUSTA (sin slashes ni https)
+          PROJECT_ID=$(echo $SUPABASE_URL | sed -e 's/https:\/\///' -e 's/\.supabase\.co//' -e 's/\///g')
           
-          # 1. Resolvemos a IPv4 y encodeamos el password usando Python (nativo en ubuntu-latest)
-          # Esto evita:
-          # - Errores de red 'IPv6 unreachable'
-          # - Errores de caracteres especiales en el password (#, @, etc.)
+          # 1. Resolvemos a IPv4 y encodeamos el password usando Python
+          # El error 'No address associated with hostname' suele ser por slashes residuales en el ID
           export SUPABASE_IPV4=$(python3 -c "import socket; print(socket.gethostbyname('db.$PROJECT_ID.supabase.co'))")
           export ENCODED_PASS=$(python3 -c "import urllib.parse; print(urllib.parse.quote(\"\"\"$SUPABASE_DB_PASSWORD\"\"\"))")
           
