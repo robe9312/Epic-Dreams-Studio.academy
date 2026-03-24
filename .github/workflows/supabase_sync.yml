@@ -24,10 +24,8 @@ jobs:
           # Extraemos el ID del proyecto de la URL (ej: https://abc.supabase.co -> abc)
           PROJECT_ID=$(echo $SUPABASE_URL | sed -e 's/https:\/\///' -e 's/\.supabase\.co//')
           
-          # 1. Resolvemos explícitamente a IPv4 para evitar errores de red en GitHub Actions (Network is unreachable)
-          # Buscamos la primera dirección IPv4 del host de Supabase
-          IPV4_ADDR=$(getent ahostsv4 "db.$PROJECT_ID.supabase.co" | head -n 1 | awk '{print $1}')
-          echo "Conectando via IPv4 a: $IPV4_ADDR ($PROJECT_ID)"
+          echo "Sincronizando con proyecto: $PROJECT_ID (Puerto 6543)"
           
-          # 2. Aplicamos el esquema usando la IP resuelta y el puerto del Pooler (6543)
-          PGPASSWORD="$SUPABASE_DB_PASSWORD" psql -h "$IPV4_ADDR" -p 6543 -d postgres -U postgres -f "database(Supabase SQL)/v2_schema.sql"
+          # 2. Aplicamos el esquema usando el formato de cadena de conexión (URI)
+          # Esto evita confusiones con sockets locales si la resolución de host es ambigua
+          psql "postgresql://postgres:$SUPABASE_DB_PASSWORD@db.$PROJECT_ID.supabase.co:6543/postgres" -f "database(Supabase SQL)/v2_schema.sql"
