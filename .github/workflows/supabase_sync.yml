@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'database(Supabase SQL)/**'
+      - '.github/workflows/supabase_sync.yml'
 
   workflow_dispatch:
 

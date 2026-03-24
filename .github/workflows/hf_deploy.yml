@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'backend(FastAPI+Python)/**'
+      - '.github/workflows/hf_deploy.yml'
 
   # to run this workflow manually from the Actions tab
   workflow_dispatch:
