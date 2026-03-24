@@ -7,6 +7,18 @@ import { Inspector } from '@/components/Inspector';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTimelineStore } from '@/store/useTimelineStore';
 
+interface SceneContent {
+    type: string;
+    text?: string;
+    character?: string;
+    parenthetical?: string;
+}
+
+interface Scene {
+    heading: string;
+    content: SceneContent[];
+}
+
 export default function StudioPage() {
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -45,7 +57,7 @@ export default function StudioPage() {
 
                                 const firstScene = data.data.parsed_script?.[0];
                                 const scriptContent = firstScene 
-                                    ? `${firstScene.heading}\n${firstScene.content.map((c: any) => c.text || c.character).join(' ')}` 
+                                    ? `${firstScene.heading}\n${firstScene.content.map((c: SceneContent) => c.text || c.character).join(' ')}` 
                                     : data.data.script;
 
                                 const scriptClip = { id: 's1', track: 'narrative', content: scriptContent.substring(0, 150) + '...', startTime: 0, endTime: 10 };
@@ -110,10 +122,10 @@ export default function StudioPage() {
                     <div className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
                         <input 
                             value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrompt(e.target.value)}
                             placeholder="Describe your cinematic vision..."
                             className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none placeholder:text-gray-600"
-                            onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleGenerate()}
                         />
                         <button 
                             onClick={handleGenerate}
