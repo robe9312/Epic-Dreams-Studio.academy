@@ -85,3 +85,47 @@ class DirectorAgent:
         workflow.add_edge("parser", END)
 
         return workflow.compile()
+
+    async def run_stream(self, idea: str):
+        """
+        Ejecuta la orquestación y emite eventos SSE para cada paso.
+        """
+        from app.services.event_manager import event_manager
+        
+        graph = self.build_graph()
+        initial_state = {
+            "idea": idea,
+            "script": "",
+            "parsed_script": [],
+            "shotlist": "",
+            "feasibility_score": 0.0,
+            "feedback": "",
+            "iterations": 0
+        }
+
+        yield event_manager.format_sse({"agent": "Director Agent", "message": "Starting production orchestration..."}, event="log")
+
+        async for update in graph.astream(initial_state, stream_mode="updates"):
+            for node_name, output in update.items():
+                # Mapeo de nombres de nodos a mensajes amigables
+                messages = {
+                    "writer": "Script Agent is drafting the screenplay...",
+                    "dp": "DP Agent is planning the visual language and shot list...",
+                    "critic": "Critic Agent is performing a feasibility audit...",
+                    "parser": "Script Parser is structuring the scene data..."
+                }
+                
+                msg = messages.get(node_name, f"Node {node_name} complete.")
+                yield event_manager.format_sse({"agent": node_name.capitalize() + " Agent", "message": msg}, event="log")
+                
+                # Si es el nodo final (parser), enviamos el resultado completo
+                if node_name == "parser":
+                    yield event_manager.format_sse({
+                        "status": "complete",
+                        "data": {
+                            "script": output.get("script", ""),
+                            "parsed_script": output.get("parsed_script", []),
+                            "shotlist": output.get("shotlist", ""),
+                            "score": output.get("feasibility_score", 100)
+                        }
+                    }, event="result")

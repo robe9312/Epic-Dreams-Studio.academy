@@ -26,4 +26,4 @@ jobs:
           git config --global user.name "Epic Dreams Studio Academy"
           
           # Creamos una rama temporal con el contenido de la carpeta backend
-          git subtree push --prefix="backend(FastAPI+Python)" https://robe9312:$HF_TOKEN@huggingface.co/spaces/robe9312/epic-dreams-backend main
+          git subtree push --prefix="backend(FastAPI+Python)" https://robe9312:$HF_TOKEN@huggingface.co/spaces/robe9312/epic-dreams-studio-academy main

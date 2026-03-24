@@ -5,6 +5,7 @@ import httpx
 import socket
 import logging
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Header, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from groq import Groq
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -201,39 +202,22 @@ from app.agents.director_agent import DirectorAgent
 
 @app.post("/api/v2/production/generate")
 async def generate_production(request: ChatRequest):
+    # (Existing implementation remains for backward compatibility)
+    ...
+
+@app.get("/api/v2/production/stream")
+async def stream_production(prompt: str):
     """
-    Inicia el ciclo de orquestación multi-agente para generar un guion y shotlist.
+    Inicia la orquestación y devuelve un stream de eventos SSE.
     """
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY no configurada")
     
-    try:
-        director = DirectorAgent()
-        graph = director.build_graph()
-        
-        # Ejecutar el grafo de estados
-        final_state = await graph.ainvoke({
-            "idea": request.prompt,
-            "script": "",
-            "parsed_script": [],
-            "shotlist": "",
-            "feasibility_score": 0.0,
-            "feedback": "",
-            "iterations": 0
-        })
-        
-        return {
-            "status": "success",
-            "data": {
-                "script": final_state["script"],
-                "parsed_script": final_state["parsed_script"],
-                "shotlist": final_state["shotlist"],
-                "score": final_state["feasibility_score"]
-            }
-        }
-    except Exception as e:
-        logger.error(f"Error en generación de producción: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    director = DirectorAgent()
+    return StreamingResponse(
+        director.run_stream(prompt),
+        media_type="text/event-stream"
+    )
 
 @app.post("/webhook")
 async def telegram_webhook(

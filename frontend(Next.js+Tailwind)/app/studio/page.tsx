@@ -15,42 +15,68 @@ export default function StudioPage() {
     const handleGenerate = async () => {
         if (!prompt) return;
         setIsGenerating(true);
-        addLog({ agent: 'Director Agent', message: `Orchestrating production for: "${prompt}"`, type: 'info' });
+        // Clear previous logs if needed
+        // setLogs([]); 
         
         try {
-            const response = await fetch('http://localhost:8000/api/v2/production/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
-            });
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                const sceneCount = result.data.parsed_script?.filter((item: any) => item.type === 'scene').length || 0;
-                addLog({ agent: 'Director Agent', message: `Production cycle complete. ${sceneCount} scenes identified and structured.`, type: 'success' });
-                addLog({ agent: 'DP Agent', message: 'Shot list and visual schemas integrated into timeline.', type: 'info' });
-                
-                setFeasibilityScore(result.data.score || 95);
+            const response = await fetch(`http://localhost:8000/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`);
+            if (!response.body) throw new Error('No response body');
 
-                // Use the first scene for the initial timeline population
-                const firstScene = result.data.parsed_script?.[0];
-                const scriptContent = firstScene ? `${firstScene.heading}\n${firstScene.content.map((c: any) => c.text || c.character).join(' ')}` : result.data.script;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-                const scriptClip = { id: 's1', track: 'narrative', content: scriptContent.substring(0, 150) + '...', startTime: 0, endTime: 10 };
-                const visualClip = { id: 'v1', track: 'visual', content: `Visuals for Scene: ${firstScene?.heading || 'Sequence 1'}`, startTime: 0, endTime: 10 };
-                
-                setTracks({
-                    narrative: [scriptClip],
-                    visual: [visualClip],
-                    technical: [],
-                    training: []
-                });
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            
+                            if (data.status === 'complete') {
+                                // Result event
+                                setFeasibilityScore(data.data.score || 95);
+
+                                const firstScene = data.data.parsed_script?.[0];
+                                const scriptContent = firstScene 
+                                    ? `${firstScene.heading}\n${firstScene.content.map((c: any) => c.text || c.character).join(' ')}` 
+                                    : data.data.script;
+
+                                const scriptClip = { id: 's1', track: 'narrative', content: scriptContent.substring(0, 150) + '...', startTime: 0, endTime: 10 };
+                                const visualClip = { id: 'v1', track: 'visual', content: `Visuals for Scene: ${firstScene?.heading || 'Sequence 1'}`, startTime: 0, endTime: 10 };
+                                
+                                setTracks({
+                                    narrative: [scriptClip],
+                                    visual: [visualClip],
+                                    technical: [],
+                                    training: []
+                                });
+                            } else {
+                                // Log event
+                                addLog({ 
+                                    agent: data.agent || 'Director Agent', 
+                                    message: data.message, 
+                                    type: 'info' 
+                                });
+                            }
+                        } catch (e: any) {
+                            console.error('Error parsing SSE data:', e);
+                        }
+                    }
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             addLog({ agent: 'Director Agent', message: 'Orchestration failed. Check backend connectivity.', type: 'error' });
             console.error('Generation failed:', error);
         } finally {
             setIsGenerating(false);
+            setPrompt('');
         }
     };
 
