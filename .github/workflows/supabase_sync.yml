@@ -24,8 +24,14 @@ jobs:
           # Extraemos el ID del proyecto de la URL (ej: https://abc.supabase.co -> abc)
           PROJECT_ID=$(echo $SUPABASE_URL | sed -e 's/https:\/\///' -e 's/\.supabase\.co//')
           
-          echo "Sincronizando con proyecto: $PROJECT_ID (Puerto 6543)"
+          # 1. Resolvemos a IPv4 y encodeamos el password usando Python (nativo en ubuntu-latest)
+          # Esto evita:
+          # - Errores de red 'IPv6 unreachable'
+          # - Errores de caracteres especiales en el password (#, @, etc.)
+          export SUPABASE_IPV4=$(python3 -c "import socket; print(socket.gethostbyname('db.$PROJECT_ID.supabase.co'))")
+          export ENCODED_PASS=$(python3 -c "import urllib.parse; print(urllib.parse.quote(\"\"\"$SUPABASE_DB_PASSWORD\"\"\"))")
           
-          # 2. Aplicamos el esquema usando el formato de cadena de conexión (URI)
-          # Esto evita confusiones con sockets locales si la resolución de host es ambigua
-          psql "postgresql://postgres:$SUPABASE_DB_PASSWORD@db.$PROJECT_ID.supabase.co:6543/postgres" -f "database(Supabase SQL)/v2_schema.sql"
+          echo "Sincronizando con: $PROJECT_ID (IPv4: $SUPABASE_IPV4)"
+          
+          # 2. Aplicamos el esquema usando el formato URI con la IP y el password seguros
+          psql "postgresql://postgres:$ENCODED_PASS@$SUPABASE_IPV4:6543/postgres" -f "database(Supabase SQL)/v2_schema.sql"
