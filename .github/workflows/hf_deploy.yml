@@ -26,7 +26,9 @@ jobs:
           
           git clone https://epicdreams:$HF_TOKEN@huggingface.co/spaces/epicdreams/epic-dreams-backend hf_space
           
-          # Sincronizamos archivos (excluyendo .git)
+          # Habilitamos dotglob para incluir archivos ocultos (.env, etc)
+          # Sincronizamos borrando lo anterior para un despliegue limpio
+          rm -rf hf_space/*
           cp -rv "backend(FastAPI+Python)"/* hf_space/
           
           cd hf_space
@@ -35,5 +37,9 @@ jobs:
             echo "No changes to deploy"
           else
             git commit -m "Deploy from GitHub Actions: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin main
+            # Usamos --force para asegurar que el Space sea un espejo exacto del repo
+            git push origin main --force
           fi
+          
+          echo "Contenido desplegado:"
+          ls -la
