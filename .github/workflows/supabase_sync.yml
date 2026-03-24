@@ -25,5 +25,5 @@ jobs:
           PROJECT_ID=$(echo $SUPABASE_URL | sed -e 's/https:\/\///' -e 's/\.supabase\.co//')
           
           # Aplicamos el esquema usando psql (nativo en ubuntu-latest) 
-          # Forzamos IPv4 (-4) y usamos el puerto del Pooler (6543) para mayor estabilidad en CI
-          PGPASSWORD="$SUPABASE_DB_PASSWORD" psql -4 -h "db.$PROJECT_ID.supabase.co" -p 6543 -d postgres -U postgres -f "database(Supabase SQL)/v2_schema.sql"
+          # Usamos el puerto del Pooler (6543) para garantizar una conexión estable en entornos CI
+          PGPASSWORD="$SUPABASE_DB_PASSWORD" psql -h "db.$PROJECT_ID.supabase.co" -p 6543 -d postgres -U postgres -f "database(Supabase SQL)/v2_schema.sql"
