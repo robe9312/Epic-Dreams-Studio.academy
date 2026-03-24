@@ -26,7 +26,10 @@ Para que el archivo `.github/workflows/supabase_sync.yml` funcione, debes añadi
 |-------------|-------------|-------------------|
 | `SUPABASE_ACCESS_TOKEN` | Token de acceso CLI | Supabase Dashboard > Account Settings > Access Tokens |
 | `SUPABASE_DB_PASSWORD` | Contraseña de la DB | La que elegiste al crear el proyecto |
-| `SUPABASE_PROJECT_ID` | ID del Proyecto | URL de tu proyecto: `https://supabase.com/dashboard/project/REFERENCE_ID` |
+| `SUPABASE_URL` | URL de la API | Supabase Dashboard > Settings > API |
+
+> [!NOTE]
+> El ID del proyecto ahora se extrae automáticamente de tu `SUPABASE_URL` en el workflow. No necesitas añadirlo como secreto por separado.
 
 ---
 *Configuración de Infraestructura: **Epic Dreams Studio Academy v2***
