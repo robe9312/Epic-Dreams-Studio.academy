@@ -11,3 +11,5 @@ google-auth-oauthlib
 httpx
 langgraph
 langchain-groq
+psycopg2-binary
+sqlalchemy

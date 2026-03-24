@@ -1,0 +1,25 @@
+name: Sync Database to Neon (Postgres)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'database(SQL)/**'          # 👈 Ajusta esta ruta si es necesario
+      - '.github/workflows/neon_sync.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup PostgreSQL Client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Deploy Schema to Neon
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          psql "$DATABASE_URL" -f "database(SQL)/v2_schema.sql"
