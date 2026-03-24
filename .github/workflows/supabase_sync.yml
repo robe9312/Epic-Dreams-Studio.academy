@@ -25,6 +25,5 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
-          # Nota: Este workflow asume que el usuario ha configurado los secretos en GitHub
-          # Aplicamos el esquema v2 directamente a la base de datos remota
-          supabase db push --db-url "postgresql://postgres:$SUPABASE_DB_PASSWORD@db.$PROJECT_ID.supabase.co:5432/postgres" -f "database(Supabase SQL)/v2_schema.sql"
+          # Aplicamos el esquema v2 a la base de datos remota usando sub-comando 'execute'
+          supabase db execute --db-url "postgresql://postgres:$SUPABASE_DB_PASSWORD@db.$PROJECT_ID.supabase.co:5432/postgres" --file "database(Supabase SQL)/v2_schema.sql"
