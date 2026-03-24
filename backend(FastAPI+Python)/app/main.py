@@ -6,6 +6,7 @@ import socket
 import logging
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Header, Request
 from fastapi.responses import StreamingResponse
+from app.services.database_service import db_service
 from pydantic import BaseModel
 from groq import Groq
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -44,6 +45,30 @@ def check_network_startup():
         logger.warning(f"⚠️ DNS no resuelto al inicio: {e}")
 
 check_network_startup()
+
+@app.post("/api/v2/production/generate")
+async def generate_production(request: ChatRequest):
+    # ... generar guion con agentes ...
+    # Guardar en BD
+    project_id = db_service.create_project(
+        name="Nuevo proyecto desde API",
+        description="Generado automáticamente",
+        owner_id="tu_usuario_id"  # Ajusta según tu sistema de autenticación
+    )
+    if project_id:
+        scene_id = db_service.create_scene(
+            project_id=project_id,
+            title="Escena 1",
+            order=1,
+            script_fountain=generated_script
+        )
+        db_service.log_agent_action(
+            project_id=project_id,
+            agent_name="ScriptAgent",
+            payload={"script": generated_script},
+            feasibility_score=95.0
+        )
+    return {"message": "Proyecto creado", "project_id": project_id}
 
 # --- Funciones auxiliares para Telegram ---
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=20))
