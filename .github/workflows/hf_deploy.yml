@@ -5,42 +5,44 @@ on:
     paths:
       - 'backend(FastAPI+Python)/**'
       - '.github/workflows/hf_deploy.yml'
-
-  # to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           lfs: true
+
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Estrategia Robusta: Clonar, Copiar y Subir
-          git config --global user.email "robe-arango-academy@example.com"
-          git config --global user.name "Epic Dreams Studio Academy"
+          git config --global user.email "arangorobe380@gmail.com"
+          git config --global user.name "Robe Arango"
           
-          git clone https://epicdreams:$HF_TOKEN@huggingface.co/spaces/epicdreams/epic-dreams-backend hf_space
+          # Clonar usando usuario personal robe9312 para autenticación
+          git clone https://robe9312:$HF_TOKEN@huggingface.co/spaces/epicdreams/epic-dreams-backend hf_space
           
-          # Habilitamos dotglob para incluir archivos ocultos (.env, etc)
-          # Sincronizamos borrando lo anterior para un despliegue limpio
-          rm -rf hf_space/*
+          # Borrar todo en el destino excepto .git para mantener el historial del Space
+          find hf_space -maxdepth 1 ! -name "hf_space" ! -name ".git" -exec rm -rf {} +
+          
+          # IMPORTANTE: Habilitar dotglob para incluir .gitattributes y archivos ocultos
+          shopt -s dotglob
+          
+          # Copiar contenido del backend de GitHub al directorio del Space
           cp -rv "backend(FastAPI+Python)"/* hf_space/
           
           cd hf_space
           git add .
+          
           if git diff --staged --quiet; then
-            echo "No changes to deploy"
+            echo "Sin cambios para desplegar."
           else
-            git commit -m "Deploy from GitHub Actions: $(date +'%Y-%m-%d %H:%M:%S')"
-            # Usamos --force para asegurar que el Space sea un espejo exacto del repo
+            git commit -m "Deploy robusto desde GitHub Actions: $(date +'%Y-%m-%d %H:%M:%S')"
             git push origin main --force
           fi
-          
-          echo "Contenido desplegado:"
-          ls -la
+          echo "Despliegue finalizado."
