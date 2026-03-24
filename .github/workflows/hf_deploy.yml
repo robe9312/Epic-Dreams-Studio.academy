@@ -20,10 +20,20 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Solo enviamos el contenido de la carpeta backend al Space de HF
-          # Para que el Dockerfile quede en la raíz del Space
+          # Estrategia Robusta: Clonar, Copiar y Subir
           git config --global user.email "robe-arango-academy@example.com"
           git config --global user.name "Epic Dreams Studio Academy"
           
-          # Creamos una rama temporal con el contenido de la carpeta backend
-          git subtree push --prefix="backend(FastAPI+Python)" https://robe9312:$HF_TOKEN@huggingface.co/spaces/robe9312/epic-dreams-studio-academy main
+          git clone https://epicdreams:$HF_TOKEN@huggingface.co/spaces/epicdreams/epic-dreams-backend hf_space
+          
+          # Sincronizamos archivos (excluyendo .git)
+          cp -rv "backend(FastAPI+Python)"/* hf_space/
+          
+          cd hf_space
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to deploy"
+          else
+            git commit -m "Deploy from GitHub Actions: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push origin main
+          fi
