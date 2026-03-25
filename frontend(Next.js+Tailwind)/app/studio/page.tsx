@@ -31,7 +31,7 @@ export default function StudioPage() {
         // setLogs([]); 
         
         try {
-            // ✅ Correcto (apunta a Hugging Face)
+            // ✅ Correcto (apunta a Hugging Face) 
             const response = await fetch(`https://epicdreams-epic-dreams-backend.hf.space/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`);
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
