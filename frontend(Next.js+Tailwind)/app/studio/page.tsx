@@ -31,9 +31,8 @@ export default function StudioPage() {
         // setLogs([]); 
         
         try {
-            const response = await fetch(`http://localhost:8000/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`);
-            if (!response.body) throw new Error('No response body');
-
+            // ✅ Correcto (apunta a Hugging Face)
+            const response = await fetch(`https://epicdreams-epic-dreams-backend.hf.space/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`);
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
