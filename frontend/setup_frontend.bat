@@ -1,6 +1,6 @@
 @echo off
 echo =========================================================
-echo 🎬 EPIC DREAMS V2 - FRONTEND SETUP
+echo 🎬 EPIC DREAMS ACADEMY - FRONTEND SETUP
 echo =========================================================
 echo.
 echo Installing dependencies for the Cinematic Workbench...
