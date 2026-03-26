@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd frontend\\(Next.js\\+Tailwind\\) && npm install && npm run build",
+  "outputDirectory": "frontend(Next.js+Tailwind)/.next",
+  "framework": "nextjs"
+}
