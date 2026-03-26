@@ -44,19 +44,22 @@ export const Inspector = () => {
                     </h3>
 
                     <AnimatePresence>
-                        {logs.map((log, index) => (
+                        {logs.map((log) => (
                             <motion.div
-                                key={index} // Usamos el índice como key (alternativa si no hay id único)
+                                key={log.id}
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="p-3 rounded bg-[#0f0f0f] border border-[#1a1a1a] space-y-2"
+                                exit={{ opacity: 0, x: -20 }}
+                                className={`p-3 rounded bg-[#0f0f0f] border space-y-2 ${
+                                    log.type === 'error' ? 'border-red-500/50' : 'border-[#1a1a1a]'
+                                }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <span
                                         className={`text-[10px] font-bold uppercase ${
-                                            log.agent.includes('Director')
-                                                ? 'text-red-500'
-                                                : 'text-blue-500'
+                                            log.type === 'error' ? 'text-red-500' :
+                                            log.agent.toLowerCase().includes('director') ? 'text-red-400' :
+                                            'text-blue-400'
                                         }`}
                                     >
                                         {log.agent}
@@ -66,7 +69,7 @@ export const Inspector = () => {
                                     </span>
                                 </div>
                                 <p className="text-[11px] leading-relaxed text-gray-300">
-                                    "{log.message}"
+                                    {log.message}
                                 </p>
                             </motion.div>
                         ))}

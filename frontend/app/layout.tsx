@@ -1,9 +1,21 @@
 import type { Metadata } from 'next'
-import './globals.css' // si tienes estilos globales
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'Epic Dreams Academy',
-  description: 'Plataforma de aprendizaje cinematográfico',
+  title: 'Epic Dreams Academy — AI Cinematic Studio',
+  description: 'Plataforma de producción cinematográfica asistida por IA. Genera guiones, planos y lenguaje visual con agentes especializados.',
+  openGraph: {
+    title: 'Epic Dreams Academy',
+    description: 'AI-powered cinematic production studio',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({
@@ -12,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
-      <body>{children}</body>
+    <html lang="es" className={inter.variable}>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   )
 }
