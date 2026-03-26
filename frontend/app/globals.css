@@ -44,14 +44,23 @@ body {
   background: #2a2a2a;
 }
 
-/* Glassmorphism primitives */
+/* Glassmorphism primitives - Optimized for performance */
 .glass {
-  background: rgba(10, 10, 10, 0.7);
+  background: rgba(10, 10, 10, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 .cinematic-glow {
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.05);
+  will-change: filter;
+}
+
+/* Optimized background flares */
+.anamorphic-flare {
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
