@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* TEST: Hard-coded background to verify CSS loading */
+body {
+  background-color: #050505 !important;
+  color: white !important;
+}
+
 :root {
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 5, 5, 5;
