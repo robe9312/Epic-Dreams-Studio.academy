@@ -19,7 +19,7 @@ class TelegramStorage:
             data = {'chat_id': self.chat_id, 'caption': f"Asset: {file.filename}"}
             
             # Forzamos http2=False para compatibilidad con el proxy de Hugging Face
-            async with httpx.AsyncClient(http2=False, timeout=self.timeout) as client:
+            async with httpx.AsyncClient(http2=False, timeout=self.timeout, trust_env=False) as client:
                 response = await client.post(url, data=data, files=files)
                 result = response.json()
 
@@ -34,7 +34,7 @@ class TelegramStorage:
     async def get_download_url(self, file_id: str):
         """Genera el enlace de descarga para un archivo guardado."""
         get_file_url = f"https://api.telegram.org/bot{self.token}/getFile?file_id={file_id}"
-        async with httpx.AsyncClient(http2=False, timeout=self.timeout) as client:
+        async with httpx.AsyncClient(http2=False, timeout=self.timeout, trust_env=False) as client:
             response = await client.get(get_file_url)
             result = response.json()
 

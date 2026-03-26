@@ -84,7 +84,7 @@ async def telegram_api_call(method: str, json_data: dict = None):
     if not TELEGRAM_BOT_TOKEN:
         raise HTTPException(status_code=500, detail="TELEGRAM_BOT_TOKEN not configured")
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}"
-    async with httpx.AsyncClient(http2=False, timeout=30.0) as client:
+    async with httpx.AsyncClient(http2=False, timeout=30.0, trust_env=False) as client:
         response = await client.post(url, json=json_data)
         response.raise_for_status()
         return response.json()
