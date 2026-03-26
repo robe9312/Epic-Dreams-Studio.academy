@@ -24,6 +24,9 @@ interface TimelineState {
   isDragging: boolean;
   feasibilityScore: number;
   logs: AgentLog[];
+  scale: number; // Pixels per second
+  scrollX: number; // Viewport horizontal offset
+
   
   // Acciones
   setPlayhead: (time: number) => void;
@@ -33,6 +36,8 @@ interface TimelineState {
   setDragging: (dragging: boolean) => void;
   setFeasibilityScore: (score: number) => void;
   addLog: (log: Omit<AgentLog, 'id' | 'timestamp'>) => void;
+  setScale: (scale: number) => void;
+  setScrollX: (scrollX: number) => void;
 }
 
 export const useTimelineStore = create<TimelineState>((set) => ({
@@ -46,6 +51,8 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   },
   feasibilityScore: 0,
   logs: [],
+  scale: 50, // 50 pixels per second default
+  scrollX: 0,
 
   setPlayhead: (time) => set({ playhead: Math.max(0, time) }),
 
@@ -79,4 +86,7 @@ export const useTimelineStore = create<TimelineState>((set) => ({
       ...state.logs
     ]
   })),
+
+  setScale: (scale) => set({ scale: Math.max(5, Math.min(2000, scale)) }),
+  setScrollX: (scrollX) => set({ scrollX: Math.max(0, scrollX) }),
 }));
