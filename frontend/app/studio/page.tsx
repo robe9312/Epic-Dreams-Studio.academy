@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Timeline } from '@/components/Timeline';
-import { Canvas } from '@/components/Canvas';
-import { Inspector } from '@/components/Inspector';
-import { useTimelineStore } from '@/store/useTimelineStore';
+import { Timeline } from '../../components/Timeline';
+import { Canvas } from '../../components/Canvas';
+import { Inspector } from '../../components/Inspector';
+import { useTimelineStore } from '../../store/useTimelineStore';
 
 interface SceneContent {
     type: string;
