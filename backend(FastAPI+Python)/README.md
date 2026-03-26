@@ -8,4 +8,5 @@ pinned: false
 license: mit
 ---
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+# Cinematic AI Orchestrator v2
+Sincronización robusta activada: 2026-03-26.

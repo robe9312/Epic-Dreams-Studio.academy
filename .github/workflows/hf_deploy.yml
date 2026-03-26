@@ -34,7 +34,7 @@ jobs:
           shopt -s dotglob
           
           # Copiar contenido del backend de GitHub al directorio del Space
-          cp -rv "backend(FastAPI+Python)"/* hf_space/
+          cp -rv "./backend(FastAPI+Python)"/* hf_space/
           
           cd hf_space
           git add .
