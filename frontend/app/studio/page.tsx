@@ -29,7 +29,12 @@ export default function StudioPage() {
 
         try {
             const response = await fetch(
-                `https://epicdreams-epic-dreams-backend.hf.space/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`
+                `https://epicdreams-epic-dreams-backend.hf.space/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`,
+                {
+                    headers: {
+                        'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || 'epic_dreams_secret_2026'
+                    }
+                }
             );
 
             if (!response.ok) {

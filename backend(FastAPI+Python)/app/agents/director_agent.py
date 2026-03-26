@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, END
 from app.agents.script_agent import ScriptAgent
 from app.agents.dp_agent import DPAgent
 from app.services.fountain_parser import parser
+from app.services.database_service import db_service
 
 class AgentState(TypedDict):
     """Estado compartido de la orquestación multi-agente."""
@@ -86,12 +87,20 @@ class DirectorAgent:
 
         return workflow.compile()
 
-    async def run_stream(self, idea: str):
+    async def run_stream(self, idea: str, owner_id: str = "system"):
         """
         Ejecuta la orquestación y emite eventos SSE para cada paso.
+        Persiste los resultados en la base de datos Neon.
         """
         from app.services.event_manager import event_manager
         
+        # 1. Crear proyecto inicial en BD
+        project_id = db_service.create_project(
+            name=f"Production: {idea[:30]}...",
+            description=f"AI orchestrated production for: {idea}",
+            owner_id=owner_id
+        )
+
         graph = self.build_graph()
         initial_state = {
             "idea": idea,
@@ -105,8 +114,11 @@ class DirectorAgent:
 
         yield event_manager.format_sse({"agent": "Director Agent", "message": "Starting production orchestration..."}, event="log")
 
+        final_output = initial_state
         async for update in graph.astream(initial_state, stream_mode="updates"):
             for node_name, output in update.items():
+                final_output.update(output)
+                
                 # Mapeo de nombres de nodos a mensajes amigables
                 messages = {
                     "writer": "Script Agent is drafting the screenplay...",
@@ -118,14 +130,32 @@ class DirectorAgent:
                 msg = messages.get(node_name, f"Node {node_name} complete.")
                 yield event_manager.format_sse({"agent": node_name.capitalize() + " Agent", "message": msg}, event="log")
                 
-                # Si es el nodo final (parser), enviamos el resultado completo
+                # PERSISTENCIA: Loguear acción en BD
+                if project_id:
+                    db_service.log_agent_action(
+                        project_id=project_id,
+                        agent_name=node_name.capitalize() + "Agent",
+                        payload={"output_snippet": str(output)[:200]},
+                        feasibility_score=output.get("feasibility_score")
+                    )
+
+                # Si es el nodo final (parser), enviamos el resultado completo y guardamos escena
                 if node_name == "parser":
+                    # 2. Guardar escena final en BD
+                    if project_id:
+                        db_service.create_scene(
+                            project_id=project_id,
+                            title="Scene 1 (AI Generated)",
+                            order=1,
+                            script_fountain=final_output.get("script", "")
+                        )
+
                     yield event_manager.format_sse({
                         "status": "complete",
                         "data": {
-                            "script": output.get("script", ""),
-                            "parsed_script": output.get("parsed_script", []),
-                            "shotlist": output.get("shotlist", ""),
-                            "score": output.get("feasibility_score", 100)
+                            "script": final_output.get("script", ""),
+                            "parsed_script": final_output.get("parsed_script", []),
+                            "shotlist": final_output.get("shotlist", ""),
+                            "score": final_output.get("feasibility_score", 100)
                         }
                     }, event="result")

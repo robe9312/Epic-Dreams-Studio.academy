@@ -4,9 +4,10 @@ import tempfile
 import httpx
 import socket
 import logging
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Header, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import APIKeyHeader
 from app.services.database_service import db_service
 from pydantic import BaseModel
 from groq import AsyncGroq
@@ -22,13 +23,22 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Epic Dreams Academy API", version="2.0.0")
 
+# ── Security ──────────────────────────────────────────────────────────────────
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def verify_api_key(api_key: str = Depends(api_key_header)):
+    expected_key = os.getenv("EPIC_DREAMS_API_KEY")
+    if not expected_key:
+        return # Allow if no key is configured in env (for initial setup)
+    if api_key != expected_key:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+    return api_key
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://epic-dreams-studio.vercel.app",
-        "http://localhost:3000",
-    ],
+    allow_origins=["*"], # Relaxed for MVP/Vercel previews
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -187,7 +197,7 @@ async def groq_chat(request: ChatRequest):
 # ── Production / Multi-Agent ──────────────────────────────────────────────────
 
 @app.get("/api/v2/production/stream")
-async def stream_production(prompt: str):
+async def stream_production(prompt: str, api_key: str = Depends(verify_api_key)):
     """
     Main AI Studio endpoint.
     Triggers multi-agent orchestration (Script → DP → Critic → Parser)
