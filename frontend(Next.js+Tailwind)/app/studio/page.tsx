@@ -66,14 +66,14 @@ export default function StudioPage() {
 
                                 const scriptClip = {
                                     id: 's1',
-                                    track: 'narrative',
+                                    track: 'narrative' as const,
                                     content: scriptContent.substring(0, 150) + '...',
                                     startTime: 0,
                                     endTime: 10,
                                 };
                                 const visualClip = {
                                     id: 'v1',
-                                    track: 'visual',
+                                    track: 'visual' as const,
                                     content: `Visuals for Scene: ${firstScene?.heading || 'Sequence 1'}`,
                                     startTime: 0,
                                     endTime: 10,
