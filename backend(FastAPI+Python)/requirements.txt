@@ -1,7 +1,7 @@
 # Backend — Epic Dreams Academy API
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
-groq==0.9.0
+groq==0.30.0
 python-dotenv==1.0.1
 requests==2.31.0
 tenacity==8.3.0
