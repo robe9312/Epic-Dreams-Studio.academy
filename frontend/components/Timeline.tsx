@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTimelineStore, TrackType } from '@/store/useTimelineStore';
+import { useTimelineStore, TrackType } from '../store/useTimelineStore';
 import { motion } from 'framer-motion';
 
 const TRACKS: TrackType[] = ['narrative', 'visual', 'technical', 'training'];

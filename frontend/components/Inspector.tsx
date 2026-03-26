@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTimelineStore } from '@/store/useTimelineStore';
+import { useTimelineStore } from '../store/useTimelineStore';
 
 export const Inspector = () => {
     const { logs, feasibilityScore } = useTimelineStore();
