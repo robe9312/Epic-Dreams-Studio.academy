@@ -1,7 +1,7 @@
 # backend/app/services/database_service.py
 import os
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
