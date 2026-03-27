@@ -181,9 +181,6 @@ class DatabaseService:
             return None
 
     def update_clip(self, clip_id: str, data: Dict[str, Any]) -> bool:
-        """Actualiza un clip existente (startTime, endTime, track o content)."""
-        try:
-            with self.get_session() as session:
         """Actualiza atributos dinámicos de un clip en Neon."""
         if not data:
             return False
@@ -191,10 +188,20 @@ class DatabaseService:
         fields = []
         params = {"clip_id": clip_id}
         
+        # Mapear nombres entre frontend (camelCase) y backend (snake_case) si es necesario
+        mapping = {
+            "startTime": "start_time",
+            "endTime": "end_time",
+            "track": "track",
+            "content": "content",
+            "order": "order"
+        }
+        
         for k, v in data.items():
-            if k in ["start_time", "end_time", "track", "content", "order"]:
-                fields.append(f"{k} = :{k}")
-                params[k] = v
+            db_key = mapping.get(k, k)
+            if db_key in ["start_time", "end_time", "track", "content", "order"]:
+                fields.append(f"\"{db_key}\" = :{db_key}")
+                params[db_key] = v
         
         if not fields:
             return False
@@ -207,7 +214,7 @@ class DatabaseService:
                 session.commit()
                 return True
         except Exception as e:
-            logger.error(f"Error updating clip: {e}")
+            logger.error(f"Error actualizando clip: {e}")
             return False
 
     def save_storyboard(self, scene_id: str, image_url: str, prompt: str) -> bool:
