@@ -53,7 +53,7 @@ interface TimelineState {
   appendClipAtPlayhead: (track: TrackType, duration: number, content: string, videoId?: string) => string;
 }
 
-const API_BASE_URL = 'https://epicdreams-epic-dreams-backend.hf.space';
+const API_BASE_URL = 'https://robe9312-epic-dreams-backend.hf.space';
 const API_KEY = 'epic_dreams_secret_2026';
 
 const syncClipWithCloud = async (clipId: string, partial: Partial<Clip>) => {
