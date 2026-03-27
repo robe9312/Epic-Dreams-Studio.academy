@@ -51,7 +51,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     set({ isLoading: true });
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/assets`, {
-        headers: { 'api_key': API_KEY }
+        headers: { 'X-API-Key': API_KEY }
       });
       const data = await response.json();
       set({ 

@@ -14,7 +14,7 @@ export const AudioWorkspace: React.FC = () => {
         try {
             const response = await fetch('https://epicdreams-epic-dreams-backend.hf.space/api/v1/ai/generate-music', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'api_key': 'epic_dreams_secret_2026' },
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': 'epic_dreams_secret_2026' },
                 body: JSON.stringify({ 
                     prompt,
                     project_id: 'fad5716c-4545-49a8-9309-2b17f8de188b'

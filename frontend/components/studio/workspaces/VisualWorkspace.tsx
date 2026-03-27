@@ -15,7 +15,7 @@ export const VisualWorkspace: React.FC = () => {
         try {
             const response = await fetch('https://epicdreams-epic-dreams-backend.hf.space/api/v1/ai/generate-storyboard', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'api_key': 'epic_dreams_secret_2026' },
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': 'epic_dreams_secret_2026' },
                 body: JSON.stringify({ 
                     prompt,
                     scene_id: '953839f3-7734-40ec-8d0e-15032c00183c' // Scene: Opening Scene
