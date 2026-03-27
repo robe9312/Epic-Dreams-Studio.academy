@@ -1,10 +1,12 @@
 import os
+import urllib.parse
 from typing import Dict, Any, Optional, List
 import time
 import tempfile
 import httpx
 import socket
 import logging
+import replicate
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -243,29 +245,55 @@ async def generate_storyboard(payload: Dict[str, Any], api_key: str = Depends(ve
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
     
-    # URL de Pollinations (mismo modelo que FLUX.1 en términos de prompt)
-    image_url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}?width=1280&height=720&model=flux"
+    # URL de Pollinations con encoding robusto
+    safe_prompt = urllib.parse.quote(prompt)
+    image_url = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=1280&height=720&model=flux&enhance=true"
     
-    # Persistir en Neon si hay scene_id
+    # Persistir en Neon de forma resiliente
     if scene_id:
-        db_service.save_storyboard(scene_id, image_url, prompt)
+        try:
+            db_service.save_storyboard(scene_id, image_url, prompt)
+        except Exception as e:
+            logger.error(f"Error persistiendo storyboard: {e}")
         
     return {"status": "success", "image_url": image_url}
 
 @app.post("/api/v1/ai/generate-music")
 async def generate_music(payload: Dict[str, Any], api_key: str = Depends(verify_api_key)):
-    """Proxy para generar música via MusicGen y guardarla en Neon."""
+    """Genera música real via Replicate (MusicGen) y guarda en Neon."""
     prompt = payload.get("prompt")
     project_id = payload.get("project_id")
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
     
-    # Placeholder de audio
-    audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
+    if not REPLICATE_API_TOKEN:
+        # Fallback a placeholder si no hay token configurado para no romper el flujo
+        logger.warning("REPLICATE_API_TOKEN no configurado. Usando placeholder.")
+        audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    else:
+        try:
+            # Llamada real a MusicGen en Replicate
+            # Usando el modelo de Meta para el mejor rendimiento estéreo
+            output = replicate.run(
+                "meta/musicgen:671ac645ce5e52d1d00ef3b78223c03c2a3734e6", # Stable Meta version
+                input={
+                    "prompt": prompt,
+                    "model_version": "stereo-large",
+                    "duration": 15
+                }
+            )
+            audio_url = output if isinstance(output, str) else output[0]
+        except Exception as e:
+            logger.error(f"Replicate error: {e}")
+            audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
     
-    # Persistir en Neon si hay project_id
+    # Persistir en Neon
     if project_id:
-        db_service.save_soundtrack(project_id, audio_url, prompt)
+        try:
+            db_service.save_soundtrack(project_id, audio_url, prompt)
+        except Exception as e:
+            logger.error(f"Error persistiendo soundtrack: {e}")
         
     return {
         "status": "success", 
