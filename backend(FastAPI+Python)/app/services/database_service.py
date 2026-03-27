@@ -184,32 +184,80 @@ class DatabaseService:
         """Actualiza un clip existente (startTime, endTime, track o content)."""
         try:
             with self.get_session() as session:
-                # Construir cláusula SET dinámica
-                set_clauses = []
-                params = {"id": clip_id}
-                # Mapear nombres entre frontend (camelCase) y backend (snake_case)
-                mapping = {
-                    "startTime": "start_time",
-                    "endTime": "end_time",
-                    "track": "track",
-                    "content": "content"
-                }
-                
-                for key, value in data.items():
-                    db_key = mapping.get(key, key)
-                    set_clauses.append(f"\"{db_key}\" = :{key}")
-                    params[key] = value
-                
-                if not set_clauses:
-                    return True
-
-                query = f"UPDATE clips SET {', '.join(set_clauses)}, updated_at = NOW() WHERE id = :id"
-                session.execute(text(query), params)
+        """Actualiza atributos dinámicos de un clip en Neon."""
+        if not data:
+            return False
+            
+        fields = []
+        params = {"clip_id": clip_id}
+        
+        for k, v in data.items():
+            if k in ["start_time", "end_time", "track", "content", "order"]:
+                fields.append(f"{k} = :{k}")
+                params[k] = v
+        
+        if not fields:
+            return False
+            
+        sql = text(f"UPDATE public.clips SET {', '.join(fields)}, updated_at = NOW() WHERE id = :clip_id")
+        
+        try:
+            with self.get_session() as session:
+                session.execute(sql, params)
                 session.commit()
                 return True
-        except SQLAlchemyError as e:
-            logger.error(f"Error actualizando clip: {e}")
+        except Exception as e:
+            logger.error(f"Error updating clip: {e}")
             return False
+
+    def save_storyboard(self, scene_id: str, image_url: str, prompt: str) -> bool:
+        """Guarda un frame de storyboard en Neon."""
+        sql = text("INSERT INTO public.storyboards (scene_id, image_url, prompt) VALUES (:scene_id, :image_url, :prompt)")
+        try:
+            with self.get_session() as session:
+                session.execute(sql, {"scene_id": scene_id, "image_url": image_url, "prompt": prompt})
+                session.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error saving storyboard: {e}")
+            return False
+
+    def save_soundtrack(self, project_id: str, audio_url: str, description: str, type: str = 'music') -> bool:
+        """Guarda un soundtrack en Neon."""
+        sql = text("INSERT INTO public.soundtracks (project_id, audio_url, description, type) VALUES (:project_id, :audio_url, :description, :type)")
+        try:
+            with self.get_session() as session:
+                session.execute(sql, {"project_id": project_id, "audio_url": audio_url, "description": description, "type": type})
+                session.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error saving soundtrack: {e}")
+            return False
+
+    def get_project_assets(self, project_id: str) -> Dict[str, Any]:
+        """Recupera todos los assets (storyboards y soundtracks) de un proyecto."""
+        try:
+            with self.get_session() as session:
+                # Get storyboards through scenes
+                sb_sql = text("""
+                    SELECT s.scene_id, s.image_url, s.prompt 
+                    FROM public.storyboards s
+                    JOIN public.scenes sc ON s.scene_id = sc.id
+                    WHERE sc.project_id = :project_id
+                """)
+                storyboards = session.execute(sb_sql, {"project_id": project_id}).mappings().all()
+                
+                # Get soundtracks
+                st_sql = text("SELECT id, audio_url, description, type FROM public.soundtracks WHERE project_id = :project_id")
+                soundtracks = session.execute(st_sql, {"project_id": project_id}).mappings().all()
+                
+                return {
+                    "storyboards": [dict(row) for row in storyboards],
+                    "soundtracks": [dict(row) for row in soundtracks]
+                }
+        except Exception as e:
+            logger.error(f"Error getting project assets: {e}")
+            return {"storyboards": [], "soundtracks": []}
 
     # ==================== MÉTODOS PARA AGENT_LOGS ====================
     def log_agent_action(self, project_id: str, agent_name: str, payload: Dict, feasibility_score: Optional[float] = None) -> bool:

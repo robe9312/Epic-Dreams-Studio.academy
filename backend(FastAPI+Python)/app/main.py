@@ -237,29 +237,46 @@ async def update_production_clip(clip_id: str, data: Dict[str, Any], api_key: st
 
 @app.post("/api/v1/ai/generate-storyboard")
 async def generate_storyboard(payload: Dict[str, Any], api_key: str = Depends(verify_api_key)):
-    """Proxy para generar imágenes de storyboard via FLUX.1."""
+    """Proxy para generar imágenes de storyboard via FLUX.1 y guardarlas en Neon."""
     prompt = payload.get("prompt")
+    scene_id = payload.get("scene_id")
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
     
-    # Aquí iría la llamada real a HF API / Pollinations
-    # Por ahora devolvemos una URL de placeholder de Pollinations que es compatible
+    # URL de Pollinations (mismo modelo que FLUX.1 en términos de prompt)
     image_url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}?width=1280&height=720&model=flux"
+    
+    # Persistir en Neon si hay scene_id
+    if scene_id:
+        db_service.save_storyboard(scene_id, image_url, prompt)
+        
     return {"status": "success", "image_url": image_url}
 
 @app.post("/api/v1/ai/generate-music")
 async def generate_music(payload: Dict[str, Any], api_key: str = Depends(verify_api_key)):
-    """Proxy para generar música via MusicGen."""
+    """Proxy para generar música via MusicGen y guardarla en Neon."""
     prompt = payload.get("prompt")
+    project_id = payload.get("project_id")
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
     
-    # Mock de generación de audio (En producción esto llama a replicate o HF Inference)
+    # Placeholder de audio
+    audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    
+    # Persistir en Neon si hay project_id
+    if project_id:
+        db_service.save_soundtrack(project_id, audio_url, prompt)
+        
     return {
         "status": "success", 
-        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", # Placeholder
+        "audio_url": audio_url,
         "description": prompt
     }
+
+@app.get("/api/v1/projects/{project_id}/assets")
+async def get_project_assets(project_id: str, api_key: str = Depends(verify_api_key)):
+    """Recupera todos los assets persistidos (storyboards, soundtracks) de Neon."""
+    return db_service.get_project_assets(project_id)
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 

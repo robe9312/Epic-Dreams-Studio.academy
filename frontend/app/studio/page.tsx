@@ -16,7 +16,12 @@ import { Book, Film, Image as ImageIcon, Music, Share2 } from 'lucide-react';
 import { MentorPanel } from '../../components/MentorPanel';
 
 export default function StudioPage() {
-    const { activeWorkspace, setWorkspace } = useProjectStore();
+    const { activeWorkspace, setWorkspace, loadInitialAssets } = useProjectStore();
+
+    React.useEffect(() => {
+        // Load assets for the default project on mount
+        loadInitialAssets('fad5716c-4545-49a8-9309-2b17f8de188b');
+    }, [loadInitialAssets]);
 
     const renderWorkspace = () => {
         switch (activeWorkspace) {

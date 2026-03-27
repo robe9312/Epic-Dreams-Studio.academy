@@ -16,12 +16,15 @@ export const VisualWorkspace: React.FC = () => {
             const response = await fetch('https://epicdreams-epic-dreams-backend.hf.space/api/v1/ai/generate-storyboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'api_key': 'epic_dreams_secret_2026' },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ 
+                    prompt,
+                    scene_id: '953839f3-7734-40ec-8d0e-15032c00183c' // Scene: Opening Scene
+                })
             });
             const data = await response.json();
             if (data.image_url) {
                 addStoryboard({
-                    sceneId: `sc_${Date.now()}`,
+                    sceneId: '953839f3-7734-40ec-8d0e-15032c00183c',
                     imageUrl: data.image_url,
                     prompt
                 });
@@ -45,6 +48,7 @@ export const VisualWorkspace: React.FC = () => {
                     <input 
                         type="text" 
                         value={prompt}
+                        title="Storyboard Prompt"
                         onChange={(e) => setPrompt(e.target.value)}
                         placeholder="Describe your scene visually..."
                         className="bg-transparent border-none focus:outline-none px-4 text-xs w-96 text-gray-300"
