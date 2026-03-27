@@ -180,6 +180,37 @@ class DatabaseService:
             logger.error(f"Error creando clip: {e}")
             return None
 
+    def update_clip(self, clip_id: str, data: Dict[str, Any]) -> bool:
+        """Actualiza un clip existente (startTime, endTime, track o content)."""
+        try:
+            with self.get_session() as session:
+                # Construir cláusula SET dinámica
+                set_clauses = []
+                params = {"id": clip_id}
+                # Mapear nombres entre frontend (camelCase) y backend (snake_case)
+                mapping = {
+                    "startTime": "start_time",
+                    "endTime": "end_time",
+                    "track": "track",
+                    "content": "content"
+                }
+                
+                for key, value in data.items():
+                    db_key = mapping.get(key, key)
+                    set_clauses.append(f"\"{db_key}\" = :{key}")
+                    params[key] = value
+                
+                if not set_clauses:
+                    return True
+
+                query = f"UPDATE clips SET {', '.join(set_clauses)}, updated_at = NOW() WHERE id = :id"
+                session.execute(text(query), params)
+                session.commit()
+                return True
+        except SQLAlchemyError as e:
+            logger.error(f"Error actualizando clip: {e}")
+            return False
+
     # ==================== MÉTODOS PARA AGENT_LOGS ====================
     def log_agent_action(self, project_id: str, agent_name: str, payload: Dict, feasibility_score: Optional[float] = None) -> bool:
         """Registra una acción de un agente en el ciclo CCV."""

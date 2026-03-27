@@ -226,6 +226,14 @@ async def stream_production(prompt: str, project_id: str = None, api_key: str = 
         }
     )
 
+@app.patch("/api/v2/production/clips/{clip_id}")
+async def update_production_clip(clip_id: str, data: Dict[str, Any], api_key: str = Depends(verify_api_key)):
+    """Actualiza metadatos de un clip (tiempo, pista, contenido)."""
+    success = db_service.update_clip(clip_id, data)
+    if not success:
+        raise HTTPException(status_code=500, detail="Error al actualizar el clip en la base de datos")
+    return {"status": "success", "clip_id": clip_id}
+
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
 @app.get("/api/v1/telegram/set-webhook")

@@ -8,7 +8,11 @@ import { TimeRuler } from './TimeRuler';
 const TRACKS: TrackType[] = ['narrative', 'visual', 'technical', 'training'];
 
 export const Timeline: React.FC = () => {
-    const { playhead, tracks, setPlayhead, scale, scrollX, setScale, setScrollX, selectedClipId, setSelectedClip, updateClip, moveClip } = useTimelineStore();
+    const { 
+        playhead, tracks, setPlayhead, scale, scrollX, setScale, setScrollX, 
+        selectedClipId, setSelectedClip, updateClip, moveClip,
+        snappingEnabled, rippleEditEnabled, toggleSnapping, toggleRippleEdit
+    } = useTimelineStore();
     const timelineRef = useRef<HTMLDivElement>(null);
     const [dragState, setDragState] = React.useState<{ clip: Clip; initialX: number; type: 'drag' | 'trim-left' | 'trim-right' } | null>(null);
 
@@ -45,8 +49,24 @@ export const Timeline: React.FC = () => {
         };
 
         el.addEventListener('wheel', handleWheel, { passive: false });
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            
+            if (e.key.toLowerCase() === 's') {
+                toggleSnapping();
+            } else if (e.key.toLowerCase() === 'r') {
+                toggleRippleEdit();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
         // Cleanup listener
-        return () => el.removeEventListener('wheel', handleWheel);
+        return () => {
+            el.removeEventListener('wheel', handleWheel);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     const handleTimelineClick = (e: React.MouseEvent) => {
@@ -88,6 +108,21 @@ export const Timeline: React.FC = () => {
                         }}
                     >
                         -
+                    </button>
+                    <div className="w-px h-4 bg-gray-800 mx-2" />
+                    <button 
+                        onClick={toggleSnapping}
+                        className={`text-[9px] px-2 py-1 rounded transition-all uppercase tracking-wider font-bold ${snappingEnabled ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-800 text-gray-500'}`}
+                        title="Magnetic Snapping (S)"
+                    >
+                        Snapping
+                    </button>
+                    <button 
+                        onClick={toggleRippleEdit}
+                        className={`text-[9px] px-2 py-1 rounded transition-all uppercase tracking-wider font-bold ${rippleEditEnabled ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-800 text-gray-500'}`}
+                        title="Ripple Edit (R)"
+                    >
+                        Ripple
                     </button>
                 </div>
             </div>
@@ -149,9 +184,48 @@ export const Timeline: React.FC = () => {
                                             setDragState({ clip, initialX: e.clientX, type });
                                             
                                             const handleMouseMove = (moveEvent: MouseEvent) => {
-                                                const deltaX = (moveEvent.clientX - e.clientX) / scale;
+                                                let deltaX = (moveEvent.clientX - e.clientX) / scale;
                                                 
                                                 if (type === 'drag') {
+                                                    let newStart = clip.startTime + deltaX;
+                                                    let newEnd = clip.endTime + deltaX;
+
+                                                    // 1. SNAPPING (Magnetismo)
+                                                    if (snappingEnabled) {
+                                                        const snapThreshold = 10 / scale; // 10 pixels converts to seconds
+                                                        let bestSnap = null;
+                                                        
+                                                        // A. Snap al playhead
+                                                        if (Math.abs(newStart - playhead) < snapThreshold) bestSnap = playhead;
+                                                        else if (Math.abs(newEnd - playhead) < snapThreshold) bestSnap = playhead - (newEnd - newStart);
+                                                        
+                                                        // B. Snap a otros clips en la misma pista
+                                                        tracks[track].forEach(other => {
+                                                            if (other.id === clip.id) return;
+                                                            // Snap inicio al final de otro
+                                                            if (Math.abs(newStart - other.endTime) < snapThreshold) bestSnap = other.endTime;
+                                                            // Snap final al inicio de otro
+                                                            if (Math.abs(newEnd - other.startTime) < snapThreshold) bestSnap = other.startTime - (newEnd - newStart);
+                                                        });
+
+                                                        if (bestSnap !== null) {
+                                                            newStart = bestSnap;
+                                                            newEnd = bestSnap + (clip.endTime - clip.startTime);
+                                                            deltaX = newStart - clip.startTime; // Recalculate delta for ripple
+                                                        }
+                                                    }
+
+                                                    // 2. RIPPLE EDIT (Desplazamiento en cascada)
+                                                    if (rippleEditEnabled && Math.abs(deltaX) > 0.01) {
+                                                        const otherClipsInTrack = tracks[track].filter(c => c.id !== clip.id && c.startTime >= clip.startTime);
+                                                        otherClipsInTrack.forEach(other => {
+                                                           updateClip(track, other.id, { 
+                                                               startTime: Math.max(0, other.startTime + deltaX),
+                                                               endTime: Math.max(0.1, other.endTime + deltaX)
+                                                           });
+                                                        });
+                                                    }
+
                                                     // Detectar cambio de pista vertical
                                                     if (timelineRef.current) {
                                                         const timelineRect = timelineRef.current.getBoundingClientRect();
@@ -161,9 +235,7 @@ export const Timeline: React.FC = () => {
                                                         const targetTrack = TRACKS[Math.max(0, Math.min(TRACKS.length - 1, targetTrackIndex))];
                                                         
                                                         if (targetTrack !== track) {
-                                                            moveClip(track, targetTrack, clip.id, clip.startTime + deltaX);
-                                                            // Al cambiar de pista, detenemos este listener y el usuario deberá soltar/clicar de nuevo
-                                                            // O mejor: actualizamos la referencia de la pista actual
+                                                            moveClip(track, targetTrack, clip.id, newStart);
                                                             window.removeEventListener('mousemove', handleMouseMove);
                                                             window.removeEventListener('mouseup', handleMouseUp);
                                                             setDragState(null);
@@ -172,17 +244,26 @@ export const Timeline: React.FC = () => {
                                                     }
 
                                                     updateClip(track, clip.id, { 
-                                                        startTime: Math.max(0, clip.startTime + deltaX),
-                                                        endTime: Math.max(0.1, clip.endTime + deltaX) 
+                                                        startTime: Math.max(0, newStart),
+                                                        endTime: Math.max(0.1, newEnd) 
                                                     });
                                                 } else if (type === 'trim-left') {
-                                                    const newStart = Math.max(0, clip.startTime + deltaX);
+                                                    let newStart = clip.startTime + deltaX;
+                                                    if (snappingEnabled) {
+                                                       const snapThreshold = 10 / scale;
+                                                       if (Math.abs(newStart - playhead) < snapThreshold) newStart = playhead;
+                                                    }
                                                     if (newStart < clip.endTime) {
                                                         updateClip(track, clip.id, { startTime: newStart });
                                                     }
                                                 } else if (type === 'trim-right') {
-                                                    const newEnd = Math.max(clip.startTime + 0.1, clip.endTime + deltaX);
-                                                    updateClip(track, clip.id, { endTime: newEnd });
+                                                    let newEnd = clip.endTime + deltaX;
+                                                    if (snappingEnabled) {
+                                                       const snapThreshold = 10 / scale;
+                                                       if (Math.abs(newEnd - playhead) < snapThreshold) newEnd = playhead;
+                                                    }
+                                                    const finalEnd = Math.max(clip.startTime + 0.1, newEnd);
+                                                    updateClip(track, clip.id, { endTime: finalEnd });
                                                 }
                                             };
                                             

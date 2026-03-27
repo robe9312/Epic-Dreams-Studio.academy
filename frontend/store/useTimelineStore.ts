@@ -29,6 +29,8 @@ interface TimelineState {
   scrollX: number; // Viewport horizontal offset
   selectedClipId: string | null;
   activeAdvice: { agent: string; message: string } | null;
+  snappingEnabled: boolean;
+  rippleEditEnabled: boolean;
 
   
   // Acciones
@@ -43,11 +45,28 @@ interface TimelineState {
   setScrollX: (scrollX: number) => void;
   setSelectedClip: (id: string | null) => void;
   setAdvice: (advice: { agent: string; message: string } | null) => void;
+  toggleSnapping: () => void;
+  toggleRippleEdit: () => void;
   updateClipContent: (track: TrackType, clipId: string, content: string) => void;
   updateClip: (track: TrackType, clipId: string, partial: Partial<Clip>) => void;
   moveClip: (fromTrack: TrackType, toTrack: TrackType, clipId: string, newStartTime: number) => void;
   appendClipAtPlayhead: (track: TrackType, duration: number, content: string, videoId?: string) => string;
 }
+
+const API_BASE_URL = 'https://epicdreams-epic-dreams-backend.hf.space';
+const API_KEY = 'epic_dreams_secret_2026';
+
+const syncClipWithCloud = async (clipId: string, partial: Partial<Clip>) => {
+  try {
+    await fetch(`${API_BASE_URL}/api/v2/production/clips/${clipId}?api_key=${API_KEY}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial),
+    });
+  } catch (err) {
+    console.error("Failed to sync clip with cloud:", err);
+  }
+};
 
 export const useTimelineStore = create<TimelineState>((set) => ({
   playhead: 0,
@@ -64,6 +83,8 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   scrollX: 0,
   selectedClipId: null,
   activeAdvice: null,
+  snappingEnabled: true,
+  rippleEditEnabled: false,
 
   setPlayhead: (time) => set({ playhead: Math.max(0, time) }),
 
@@ -103,6 +124,8 @@ export const useTimelineStore = create<TimelineState>((set) => ({
 
   setSelectedClip: (id) => set({ selectedClipId: id }),
   setAdvice: (advice) => set({ activeAdvice: advice }),
+  toggleSnapping: () => set((state) => ({ snappingEnabled: !state.snappingEnabled })),
+  toggleRippleEdit: () => set((state) => ({ rippleEditEnabled: !state.rippleEditEnabled })),
 
   updateClipContent: (track, clipId, content) => set((state) => ({
     tracks: {
@@ -111,20 +134,27 @@ export const useTimelineStore = create<TimelineState>((set) => ({
     }
   })),
 
-  updateClip: (track, clipId, partial) => set((state) => ({
-    tracks: {
-      ...state.tracks,
-      [track]: state.tracks[track].map(c => {
+  updateClip: (track, clipId, partial) => set((state) => {
+    const updatedClips = state.tracks[track].map(c => {
         if (c.id === clipId) {
           const updated = { ...c, ...partial };
-          // Asegurar integridad de tiempos
           if (updated.endTime < updated.startTime) updated.endTime = updated.startTime + 0.1;
+          
+          // Sync with cloud (async, don't await)
+          syncClipWithCloud(clipId, partial);
+          
           return updated;
         }
         return c;
-      }).sort((a, b) => a.startTime - b.startTime)
-    }
-  })),
+      });
+
+    return {
+      tracks: {
+        ...state.tracks,
+        [track]: updatedClips.sort((a, b) => a.startTime - b.startTime)
+      }
+    };
+  }),
 
   moveClip: (fromTrack, toTrack, clipId, newStartTime) => set((state) => {
     const clip = state.tracks[fromTrack].find(c => c.id === clipId);
@@ -152,13 +182,22 @@ export const useTimelineStore = create<TimelineState>((set) => ({
     }
 
     // Si es distinta pista
-    return {
+    const finalUpdate = {
       tracks: {
         ...state.tracks,
         [fromTrack]: sourceCleanup,
         [toTrack]: [...state.tracks[toTrack], movedClip].sort((a, b) => a.startTime - b.startTime)
       }
     };
+
+    // Sync with cloud (incluyendo cambio de track)
+    syncClipWithCloud(clipId, { 
+        startTime: movedClip.startTime, 
+        endTime: movedClip.endTime, 
+        track: toTrack 
+    });
+
+    return finalUpdate;
   }),
 
   appendClipAtPlayhead: (track, duration, content, videoId) => {
