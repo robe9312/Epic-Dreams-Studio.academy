@@ -170,12 +170,16 @@ async def upload_to_youtube(
     if ext not in allowed:
         raise HTTPException(status_code=400, detail="Unsupported video format")
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
-
-    background_tasks.add_task(youtube_service.upload_video, tmp_path, title, description)
-    return {"status": "processing", "message": "Upload started in background"}
+    import asyncio
+    try:
+        # Transferimos la tarea bloqueante a un thread pool para que no ahogue FastAPI
+        result = await asyncio.to_thread(youtube_service.upload_video, tmp_path, title, description)
+        return {"status": "success", "video_id": result["video_id"], "url": result["url"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"YouTube Upload Failed: {e}")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 # ── Groq Chat ─────────────────────────────────────────────────────────────────
 

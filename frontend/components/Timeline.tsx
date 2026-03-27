@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 const TRACKS: TrackType[] = ['narrative', 'visual', 'technical', 'training'];
 
 export const Timeline: React.FC = () => {
-    const { playhead, tracks, setPlayhead, scale, scrollX, setScale, setScrollX } = useTimelineStore();
+    const { playhead, tracks, setPlayhead, scale, scrollX, setScale, setScrollX, selectedClipId, setSelectedClip } = useTimelineStore();
     const timelineRef = useRef<HTMLDivElement>(null);
 
     // Setup non-passive wheel event for Zooming and Panning
@@ -54,6 +54,7 @@ export const Timeline: React.FC = () => {
         
         const newTime = (clickX + scrollX) / scale;
         setPlayhead(Math.max(0, newTime));
+        setSelectedClip(null); // Deseleccionar al hacer click fuera de un clip
     };
 
     return (
@@ -126,18 +127,27 @@ export const Timeline: React.FC = () => {
                         <div className="flex flex-col h-full absolute top-0 left-0 mt-[1px]">
                             {TRACKS.map((track) => (
                                 <div key={track} className="h-1/4 border-b border-transparent relative w-[100000px]">
-                                    {tracks[track].map((clip) => (
-                                        <div 
-                                            key={clip.id}
-                                            className="absolute top-1 h-[calc(100%-8px)] rounded bg-[#252525] border border-[#444] flex items-center px-3 text-white truncate shadow-sm hover:border-gray-400 hover:bg-[#333] cursor-pointer transition-colors backdrop-blur-sm"
-                                            style={{ 
-                                                left: `${clip.startTime * scale}px`,
-                                                width: `${(clip.endTime - clip.startTime) * scale}px`
-                                            }}
-                                        >
-                                            <span className="font-medium text-[11px] truncate tracking-wide">{clip.content}</span>
-                                        </div>
-                                    ))}
+                                    {tracks[track].map((clip) => {
+                                        const isSelected = clip.id === selectedClipId;
+                                        return (
+                                            <div 
+                                                key={clip.id}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedClip(clip.id);
+                                                    setPlayhead(clip.startTime);
+                                                }}
+                                                className={`absolute top-1 h-[calc(100%-8px)] rounded flex items-center px-3 text-white truncate shadow-sm cursor-pointer transition-colors backdrop-blur-sm
+                                                    ${isSelected ? 'border-2 border-red-500 bg-[#444] z-10' : 'bg-[#252525] border border-[#444] hover:border-gray-400 hover:bg-[#333] z-0'}`}
+                                                style={{ 
+                                                    left: `${clip.startTime * scale}px`,
+                                                    width: `${(clip.endTime - clip.startTime) * scale}px`
+                                                }}
+                                            >
+                                                <span className="font-medium text-[11px] truncate tracking-wide pointer-events-none">{clip.content}</span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ))}
                         </div>

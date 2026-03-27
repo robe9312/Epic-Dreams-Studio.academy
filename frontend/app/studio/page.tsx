@@ -1,121 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Timeline } from '../../components/Timeline';
 import { Canvas } from '../../components/Canvas';
-import { Inspector } from '../../components/Inspector';
-import { useTimelineStore } from '../../store/useTimelineStore';
-
-interface SceneContent {
-    type: string;
-    text?: string;
-    character?: string;
-    parenthetical?: string;
-}
-
-interface Scene {
-    heading: string;
-    content: SceneContent[];
-}
+import { AIWorkbench } from '../../components/AIWorkbench';
+import { ClipEditor } from '../../components/ClipEditor';
 
 export default function StudioPage() {
-    const [prompt, setPrompt] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const { setTracks, addLog, setFeasibilityScore } = useTimelineStore();
-
-    const handleGenerate = async () => {
-        if (!prompt) return;
-        setIsGenerating(true);
-
-        try {
-            const response = await fetch(
-                `https://epicdreams-epic-dreams-backend.hf.space/api/v2/production/stream?prompt=${encodeURIComponent(prompt)}`,
-                {
-                    headers: {
-                        'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || 'epic_dreams_secret_2026'
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`HTTP error ${response.status}`);
-            }
-            if (!response.body) {
-                throw new Error('Response body is null');
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            if (data.status === 'complete') {
-                                setFeasibilityScore(data.data.score || 95);
-
-                                const firstScene = data.data.parsed_script?.[0];
-                                const scriptContent = firstScene
-                                    ? `${firstScene.heading}\n${firstScene.content.map((c: SceneContent) => c.text || c.character).join(' ')}`
-                                    : data.data.script;
-
-                                const scriptClip = {
-                                    id: 's1',
-                                    track: 'narrative' as const,
-                                    content: scriptContent.substring(0, 150) + '...',
-                                    startTime: 0,
-                                    endTime: 10,
-                                };
-                                const visualClip = {
-                                    id: 'v1',
-                                    track: 'visual' as const,
-                                    content: `Visuals for Scene: ${firstScene?.heading || 'Sequence 1'}`,
-                                    startTime: 0,
-                                    endTime: 10,
-                                };
-
-                                setTracks({
-                                    narrative: [scriptClip],
-                                    visual: [visualClip],
-                                    technical: [],
-                                    training: [],
-                                });
-                            } else {
-                                addLog({
-                                    agent: data.agent || 'Director Agent',
-                                    message: data.message,
-                                    type: 'info',
-                                });
-                            }
-                        } catch (e) {
-                            console.error('Error parsing SSE data:', e);
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            addLog({
-                agent: 'Director Agent',
-                message: 'Orchestration failed. Check backend connectivity.',
-                type: 'error',
-            });
-            console.error('Generation failed:', error);
-        } finally {
-            setIsGenerating(false);
-            setPrompt('');
-        }
-    };
-
     return (
         <div className="h-screen w-screen bg-[#050505] text-white flex flex-col overflow-hidden font-sans selection:bg-red-500/30">
             {/* Minimalist Top Nav */}
@@ -141,32 +32,16 @@ export default function StudioPage() {
 
             {/* Main Workbench Area */}
             <main className="flex-1 flex overflow-hidden relative">
+                {/* Visual Monitor Canvas */}
                 <Canvas />
-                <Inspector />
-
-                {/* Overlaid AI Prompt Bar */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-40">
-                    <div className="bg-[#111]/80 backdrop-blur-lg border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl will-change-transform">
-                        <input
-                            value={prompt}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrompt(e.target.value)}
-                            placeholder="Describe your cinematic vision..."
-                            className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none placeholder:text-gray-600"
-                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
-                                e.key === 'Enter' && handleGenerate()
-                            }
-                        />
-                        <button
-                            onClick={handleGenerate}
-                            disabled={isGenerating || !prompt}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                                isGenerating
-                                    ? 'bg-gray-800 text-gray-500'
-                                    : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20'
-                            }`}
-                        >
-                            {isGenerating ? 'Orchestrating...' : 'Run AI Studio'}
-                        </button>
+                
+                {/* Right Side Panels: AI Orchestrator & Properties */}
+                <div className="w-96 flex flex-col border-l border-[#1a1a1a] bg-[#0a0a0a] z-40 p-2 space-y-2">
+                    <div className="flex-1">
+                        <AIWorkbench />
+                    </div>
+                    <div className="h-auto">
+                        <ClipEditor />
                     </div>
                 </div>
             </main>
