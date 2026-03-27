@@ -12,10 +12,7 @@ export const Canvas = () => {
     return (
         <div className="flex-1 bg-[#050505] flex items-center justify-center p-8 relative overflow-hidden group">
             {/* Grid background */}
-            <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '24px 24px' }}
-            />
+            <div className="absolute inset-0 opacity-10 pointer-events-none grid-bg" />
 
             {/* 16:9 Viewport */}
             <motion.div

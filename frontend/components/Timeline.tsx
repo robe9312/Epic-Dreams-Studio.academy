@@ -141,22 +141,25 @@ export const Timeline: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Main Scrollable Timeline */}
-                <div 
+                <motion.div 
                     ref={timelineRef}
-                    className="flex-1 ml-24 relative overflow-hidden bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]"
-                    style={{ backgroundPosition: `${-scrollX % 20}px 0` }} // Subtle grid moving with pan
+                    className="flex-1 ml-24 relative overflow-hidden timeline-grid-bg"
+                    animate={{ backgroundPositionX: -scrollX % 20 }}
+                    transition={{ duration: 0 }}
                     onClick={handleTimelineClick}
                 >
                     {/* Timeline Canvas (Panned via Transform) */}
-                    <div className="h-full absolute top-0 left-0 will-change-transform" style={{ transform: `translateX(${-scrollX}px)` }}>
+                    <motion.div 
+                        className="h-full absolute top-0 left-0 will-change-transform" 
+                        animate={{ x: -scrollX }}
+                        transition={{ duration: 0 }}
+                    >
                         
                         {/* Playhead visualization */}
                         <motion.div 
                             className="absolute top-0 bottom-0 w-[1px] bg-red-500 z-50 pointer-events-none"
-                            style={{ left: `${playhead * scale}px` }}
                             initial={false}
-                            animate={{ left: `${playhead * scale}px` }}
+                            animate={{ x: playhead * scale }}
                             transition={{ type: "spring", stiffness: 400, damping: 40 }}
                         >
                             <div className="w-3 h-3 bg-red-500 absolute -top-1.5 -left-1.5 rotate-45" />
@@ -277,31 +280,32 @@ export const Timeline: React.FC = () => {
                                             window.addEventListener('mouseup', handleMouseUp);
                                         };
 
-                                        return (
-                                            <div 
+                                         return (
+                                            <motion.div 
                                                 key={clip.id}
                                                 onMouseDown={handleMouseDown}
                                                 className={`absolute top-1 h-[calc(100%-8px)] rounded flex items-center px-3 text-white truncate shadow-sm cursor-pointer transition-colors backdrop-blur-sm group
                                                     ${isSelected ? 'border-2 border-red-500 bg-[#444] z-10' : 'bg-[#252525] border border-[#444] hover:border-gray-400 hover:bg-[#333] z-0'}`}
-                                                style={{ 
-                                                    left: `${clip.startTime * scale}px`,
-                                                    width: `${(clip.endTime - clip.startTime) * scale}px`
+                                                animate={{ 
+                                                    x: clip.startTime * scale,
+                                                    width: (clip.endTime - clip.startTime) * scale
                                                 }}
+                                                transition={{ duration: 0 }}
                                             >
                                                 {/* Trim Handles Visual */}
                                                 <div className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize opacity-0 group-hover:opacity-100 bg-red-500/30" />
                                                 <div className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize opacity-0 group-hover:opacity-100 bg-red-500/30" />
                                                 
                                                 <span className="font-medium text-[11px] truncate tracking-wide pointer-events-none">{clip.content}</span>
-                                            </div>
+                                            </motion.div>
                                         );
                                     })}
                                 </div>
                             ))}
                         </div>
                         
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             </div>
         </div>
     );
