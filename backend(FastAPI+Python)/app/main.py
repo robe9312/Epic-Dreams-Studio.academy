@@ -27,13 +27,17 @@ app = FastAPI(title="Epic Dreams Academy API", version="2.0.0")
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-def verify_api_key(api_key: str = Depends(api_key_header)):
+async def verify_api_key(request: Request, api_key: str = Depends(api_key_header)):
     expected_key = os.getenv("EPIC_DREAMS_API_KEY")
     if not expected_key:
         return # Allow if no key is configured in env (for initial setup)
-    if api_key != expected_key:
+    
+    # Fallback to query param if header is missing (for EventSource)
+    token = api_key or request.query_params.get("api_key")
+    
+    if token != expected_key:
         raise HTTPException(status_code=403, detail="Could not validate credentials")
-    return api_key
+    return token
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(

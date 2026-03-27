@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { useTimelineStore, TrackType } from '../store/useTimelineStore';
+import { useTimelineStore, TrackType, Clip } from '../store/useTimelineStore';
 import { motion } from 'framer-motion';
+import { TimeRuler } from './TimeRuler';
 
 const TRACKS: TrackType[] = ['narrative', 'visual', 'technical', 'training'];
 
 export const Timeline: React.FC = () => {
-    const { playhead, tracks, setPlayhead, scale, scrollX, setScale, setScrollX, selectedClipId, setSelectedClip } = useTimelineStore();
+    const { playhead, tracks, setPlayhead, scale, scrollX, setScale, setScrollX, selectedClipId, setSelectedClip, updateClip, moveClip } = useTimelineStore();
     const timelineRef = useRef<HTMLDivElement>(null);
+    const [dragState, setDragState] = React.useState<{ clip: Clip; initialX: number; type: 'drag' | 'trim-left' | 'trim-right' } | null>(null);
 
     // Setup non-passive wheel event for Zooming and Panning
     useEffect(() => {
@@ -58,7 +60,7 @@ export const Timeline: React.FC = () => {
     };
 
     return (
-        <div className="w-full h-64 bg-[#0a0a0a] border-t border-[#1a1a1a] flex flex-col relative overflow-hidden text-xs text-gray-400 select-none">
+        <div className="w-full h-72 bg-[#0a0a0a] border-t border-[#1a1a1a] flex flex-col relative overflow-hidden text-xs text-gray-400 select-none">
             {/* Header / Ruler controls */}
             <div className="h-8 border-b border-[#1a1a1a] flex items-center px-4 space-x-4 bg-[#0f0f0f] z-50 relative">
                 <span className="text-red-500 font-mono font-bold tracking-tighter w-20">
@@ -89,6 +91,8 @@ export const Timeline: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            <TimeRuler />
 
             {/* Tracks Area Container */}
             <div className="flex-1 flex relative overflow-hidden">
@@ -129,21 +133,84 @@ export const Timeline: React.FC = () => {
                                 <div key={track} className="h-1/4 border-b border-transparent relative w-[100000px]">
                                     {tracks[track].map((clip) => {
                                         const isSelected = clip.id === selectedClipId;
+                                        
+                                        const handleMouseDown = (e: React.MouseEvent) => {
+                                            e.stopPropagation();
+                                            setSelectedClip(clip.id);
+                                            
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const localX = e.clientX - rect.left;
+                                            const edgeThreshold = 10;
+                                            
+                                            let type: 'drag' | 'trim-left' | 'trim-right' = 'drag';
+                                            if (localX < edgeThreshold) type = 'trim-left';
+                                            else if (localX > rect.width - edgeThreshold) type = 'trim-right';
+                                            
+                                            setDragState({ clip, initialX: e.clientX, type });
+                                            
+                                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                                                const deltaX = (moveEvent.clientX - e.clientX) / scale;
+                                                
+                                                if (type === 'drag') {
+                                                    // Detectar cambio de pista vertical
+                                                    if (timelineRef.current) {
+                                                        const timelineRect = timelineRef.current.getBoundingClientRect();
+                                                        const y = moveEvent.clientY - (timelineRect.top + 32 + 24); // Offset header + ruler
+                                                        const trackHeight = (timelineRect.height - 32 - 24) / TRACKS.length;
+                                                        const targetTrackIndex = Math.floor(y / trackHeight);
+                                                        const targetTrack = TRACKS[Math.max(0, Math.min(TRACKS.length - 1, targetTrackIndex))];
+                                                        
+                                                        if (targetTrack !== track) {
+                                                            moveClip(track, targetTrack, clip.id, clip.startTime + deltaX);
+                                                            // Al cambiar de pista, detenemos este listener y el usuario deberá soltar/clicar de nuevo
+                                                            // O mejor: actualizamos la referencia de la pista actual
+                                                            window.removeEventListener('mousemove', handleMouseMove);
+                                                            window.removeEventListener('mouseup', handleMouseUp);
+                                                            setDragState(null);
+                                                            return;
+                                                        }
+                                                    }
+
+                                                    updateClip(track, clip.id, { 
+                                                        startTime: Math.max(0, clip.startTime + deltaX),
+                                                        endTime: Math.max(0.1, clip.endTime + deltaX) 
+                                                    });
+                                                } else if (type === 'trim-left') {
+                                                    const newStart = Math.max(0, clip.startTime + deltaX);
+                                                    if (newStart < clip.endTime) {
+                                                        updateClip(track, clip.id, { startTime: newStart });
+                                                    }
+                                                } else if (type === 'trim-right') {
+                                                    const newEnd = Math.max(clip.startTime + 0.1, clip.endTime + deltaX);
+                                                    updateClip(track, clip.id, { endTime: newEnd });
+                                                }
+                                            };
+                                            
+                                            const handleMouseUp = () => {
+                                                window.removeEventListener('mousemove', handleMouseMove);
+                                                window.removeEventListener('mouseup', handleMouseUp);
+                                                setDragState(null);
+                                            };
+                                            
+                                            window.addEventListener('mousemove', handleMouseMove);
+                                            window.addEventListener('mouseup', handleMouseUp);
+                                        };
+
                                         return (
                                             <div 
                                                 key={clip.id}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedClip(clip.id);
-                                                    setPlayhead(clip.startTime);
-                                                }}
-                                                className={`absolute top-1 h-[calc(100%-8px)] rounded flex items-center px-3 text-white truncate shadow-sm cursor-pointer transition-colors backdrop-blur-sm
+                                                onMouseDown={handleMouseDown}
+                                                className={`absolute top-1 h-[calc(100%-8px)] rounded flex items-center px-3 text-white truncate shadow-sm cursor-pointer transition-colors backdrop-blur-sm group
                                                     ${isSelected ? 'border-2 border-red-500 bg-[#444] z-10' : 'bg-[#252525] border border-[#444] hover:border-gray-400 hover:bg-[#333] z-0'}`}
                                                 style={{ 
                                                     left: `${clip.startTime * scale}px`,
                                                     width: `${(clip.endTime - clip.startTime) * scale}px`
                                                 }}
                                             >
+                                                {/* Trim Handles Visual */}
+                                                <div className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize opacity-0 group-hover:opacity-100 bg-red-500/30" />
+                                                <div className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize opacity-0 group-hover:opacity-100 bg-red-500/30" />
+                                                
                                                 <span className="font-medium text-[11px] truncate tracking-wide pointer-events-none">{clip.content}</span>
                                             </div>
                                         );

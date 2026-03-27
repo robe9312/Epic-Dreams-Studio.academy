@@ -40,17 +40,34 @@ export const Canvas = () => {
                         {activeClip ? (
                             <motion.div
                                 key={activeClip.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="space-y-4"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 flex items-center justify-center p-12 text-center"
                             >
-                                <span className="text-red-500 text-[10px] font-bold uppercase tracking-widest block mb-2">
-                                    Narrative Core
-                                </span>
-                                <h2 className="text-2xl font-serif italic text-white/90 leading-tight">
-                                    {activeClip.content}
-                                </h2>
+                                {activeClip.videoId ? (
+                                    <div className="absolute inset-0 z-0">
+                                        <iframe 
+                                            width="100%" 
+                                            height="100%" 
+                                            src={`https://www.youtube.com/embed/${activeClip.videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1`}
+                                            title="YouTube video player" 
+                                            frameBorder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                            className="pointer-events-none"
+                                        />
+                                        <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay */}
+                                    </div>
+                                ) : (
+                                    <div className="relative z-10 space-y-4">
+                                        <span className="text-red-500 text-[10px] font-bold uppercase tracking-widest block mb-2">
+                                            Narrative Core
+                                        </span>
+                                        <h2 className="text-2xl font-serif italic text-white/90 leading-tight">
+                                            {activeClip.content}
+                                        </h2>
+                                    </div>
+                                )}
                             </motion.div>
                         ) : (
                             <div className="flex flex-col items-center space-y-4">

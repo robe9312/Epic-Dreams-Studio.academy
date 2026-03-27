@@ -37,11 +37,11 @@ interface TimelineState {
   removeClip: (track: TrackType, clipId: string) => void;
   setDragging: (dragging: boolean) => void;
   setFeasibilityScore: (score: number) => void;
-  addLog: (log: Omit<AgentLog, 'id' | 'timestamp'>) => void;
-  setScale: (scale: number) => void;
   setScrollX: (scrollX: number) => void;
   setSelectedClip: (id: string | null) => void;
   updateClipContent: (track: TrackType, clipId: string, content: string) => void;
+  updateClip: (track: TrackType, clipId: string, partial: Partial<Clip>) => void;
+  moveClip: (fromTrack: TrackType, toTrack: TrackType, clipId: string, newStartTime: number) => void;
   appendClipAtPlayhead: (track: TrackType, duration: number, content: string, videoId?: string) => string;
 }
 
@@ -104,6 +104,56 @@ export const useTimelineStore = create<TimelineState>((set) => ({
       [track]: state.tracks[track].map(c => c.id === clipId ? { ...c, content } : c)
     }
   })),
+
+  updateClip: (track, clipId, partial) => set((state) => ({
+    tracks: {
+      ...state.tracks,
+      [track]: state.tracks[track].map(c => {
+        if (c.id === clipId) {
+          const updated = { ...c, ...partial };
+          // Asegurar integridad de tiempos
+          if (updated.endTime < updated.startTime) updated.endTime = updated.startTime + 0.1;
+          return updated;
+        }
+        return c;
+      }).sort((a, b) => a.startTime - b.startTime)
+    }
+  })),
+
+  moveClip: (fromTrack, toTrack, clipId, newStartTime) => set((state) => {
+    const clip = state.tracks[fromTrack].find(c => c.id === clipId);
+    if (!clip) return state;
+
+    const duration = clip.endTime - clip.startTime;
+    const movedClip: Clip = {
+      ...clip,
+      track: toTrack,
+      startTime: Math.max(0, newStartTime),
+      endTime: Math.max(0, newStartTime) + duration
+    };
+
+    // Quitar de pista origen
+    const sourceCleanup = state.tracks[fromTrack].filter(c => c.id !== clipId);
+    
+    // Si es la misma pista, solo actualizamos el array filtrado
+    if (fromTrack === toTrack) {
+        return {
+            tracks: {
+                ...state.tracks,
+                [toTrack]: [...sourceCleanup, movedClip].sort((a, b) => a.startTime - b.startTime)
+            }
+        };
+    }
+
+    // Si es distinta pista
+    return {
+      tracks: {
+        ...state.tracks,
+        [fromTrack]: sourceCleanup,
+        [toTrack]: [...state.tracks[toTrack], movedClip].sort((a, b) => a.startTime - b.startTime)
+      }
+    };
+  }),
 
   appendClipAtPlayhead: (track, duration, content, videoId) => {
     const newId = Math.random().toString(36).substring(7);

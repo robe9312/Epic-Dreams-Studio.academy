@@ -26,7 +26,8 @@ export const AIWorkbench: React.FC = () => {
         addLog({ agent: 'System', message: `📡 Iniciando conexión con FastAPI para: "${idea.substring(0, 30)}..."`, type: 'info' });
 
         // EventSource URL
-        const url = `${API_BASE_URL}/api/v2/production/stream?prompt=${encodeURIComponent(idea)}`;
+        const apiKey = 'epic_dreams_secret_2026'; // Match the default or env
+        const url = `${API_BASE_URL}/api/v2/production/stream?prompt=${encodeURIComponent(idea)}&api_key=${apiKey}`;
         const eventSource = new EventSource(url);
 
         // Escuchar eventos log
