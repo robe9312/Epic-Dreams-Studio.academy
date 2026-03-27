@@ -75,7 +75,7 @@ export const VisualWorkspace: React.FC = () => {
                         <img src={frame.imageUrl} alt={frame.prompt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
                             <p className="text-[10px] text-gray-400 line-clamp-2">{frame.prompt}</p>
-                            <button className="mt-2 text-red-500 font-bold text-[10px] uppercase tracking-widest flex items-center">
+                            <button title="Use this frame in your timeline" className="mt-2 text-red-500 font-bold text-[10px] uppercase tracking-widest flex items-center">
                                 <Play size={10} className="mr-1" /> Use in Edit
                             </button>
                         </div>

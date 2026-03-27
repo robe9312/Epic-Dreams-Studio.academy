@@ -33,7 +33,7 @@ export const ExportWorkspace: React.FC = () => {
                     <div className="space-y-4">
                         <div className="flex flex-col">
                             <label className="text-[10px] text-gray-600 mb-1">PROJECT TITLE</label>
-                            <input type="text" title="Project Title" placeholder="Enter title..." defaultValue="THE LAST SCRIPT - EPISODE 1" className="bg-transparent border-b border-[#1a1a1a] py-2 text-sm focus:outline-none focus:border-red-500" />
+                            <input type="text" id="project-title-input" title="Project Title" placeholder="Enter title..." defaultValue="THE LAST SCRIPT - EPISODE 1" className="bg-transparent border-b border-[#1a1a1a] py-2 text-sm focus:outline-none focus:border-red-500" />
                         </div>
                     </div>
                 </div>

@@ -21,7 +21,7 @@ export const IdeaWorkspace: React.FC = () => {
                 <textarea 
                     value={script}
                     onChange={(e) => setScript(e.target.value)}
-                    title="Script Editor"
+                    title="Script Content"
                     placeholder="Escribe tu guion aquí..."
                     className="flex-1 p-8 bg-transparent text-gray-300 font-mono text-sm focus:outline-none resize-none leading-relaxed"
                 />

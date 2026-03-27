@@ -1,5 +1,7 @@
 'use client';
 
+import React, { useState } from 'react';
+import { Music, Mic, Volume2, Sparkles, Play } from 'lucide-react';
 import { useProjectStore } from '../../../store/useProjectStore';
 
 export const AudioWorkspace: React.FC = () => {
