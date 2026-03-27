@@ -235,6 +235,32 @@ async def update_production_clip(clip_id: str, data: Dict[str, Any], api_key: st
         raise HTTPException(status_code=500, detail="Error al actualizar el clip en la base de datos")
     return {"status": "success", "clip_id": clip_id}
 
+@app.post("/api/v1/ai/generate-storyboard")
+async def generate_storyboard(payload: Dict[str, Any], api_key: str = Depends(verify_api_key)):
+    """Proxy para generar imágenes de storyboard via FLUX.1."""
+    prompt = payload.get("prompt")
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt is required")
+    
+    # Aquí iría la llamada real a HF API / Pollinations
+    # Por ahora devolvemos una URL de placeholder de Pollinations que es compatible
+    image_url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}?width=1280&height=720&model=flux"
+    return {"status": "success", "image_url": image_url}
+
+@app.post("/api/v1/ai/generate-music")
+async def generate_music(payload: Dict[str, Any], api_key: str = Depends(verify_api_key)):
+    """Proxy para generar música via MusicGen."""
+    prompt = payload.get("prompt")
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt is required")
+    
+    # Mock de generación de audio (En producción esto llama a replicate o HF Inference)
+    return {
+        "status": "success", 
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", # Placeholder
+        "description": prompt
+    }
+
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
 @app.get("/api/v1/telegram/set-webhook")

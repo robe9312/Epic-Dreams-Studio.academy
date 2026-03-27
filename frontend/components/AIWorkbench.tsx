@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTimelineStore } from '../store/useTimelineStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE_URL = 'https://robe9312-epic-dreams-backend.hf.space';
+const API_BASE_URL = 'https://epicdreams-epic-dreams-backend.hf.space';
 
 export const AIWorkbench: React.FC = () => {
     const [idea, setIdea] = useState('');

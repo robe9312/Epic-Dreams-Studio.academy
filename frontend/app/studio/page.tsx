@@ -1,59 +1,92 @@
 'use client';
 
 import React from 'react';
-import { Timeline } from '../../components/Timeline';
-import { Canvas } from '../../components/Canvas';
-import { AIWorkbench } from '../../components/AIWorkbench';
-import { ClipEditor } from '../../components/ClipEditor';
+import { useProjectStore, WorkspaceType } from '../../store/useProjectStore';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Workspaces
+import { IdeaWorkspace } from '../../components/studio/workspaces/IdeaWorkspace';
+import { EditWorkspace } from '../../components/studio/workspaces/EditWorkspace';
+import { VisualWorkspace } from '../../components/studio/workspaces/VisualWorkspace';
+import { AudioWorkspace } from '../../components/studio/workspaces/AudioWorkspace';
+import { ExportWorkspace } from '../../components/studio/workspaces/ExportWorkspace';
+
+// Icons (Lucide)
+import { Book, Film, Image as ImageIcon, Music, Share2 } from 'lucide-react';
 import { MentorPanel } from '../../components/MentorPanel';
 
 export default function StudioPage() {
+    const { activeWorkspace, setWorkspace } = useProjectStore();
+
+    const renderWorkspace = () => {
+        switch (activeWorkspace) {
+            case 'idea': return <IdeaWorkspace />;
+            case 'visual': return <VisualWorkspace />;
+            case 'audio': return <AudioWorkspace />;
+            case 'export': return <ExportWorkspace />;
+            default: return <EditWorkspace />;
+        }
+    };
+
+    const NAV_ITEMS: { id: WorkspaceType; label: string; icon: React.ReactNode }[] = [
+        { id: 'idea', label: 'IDEA', icon: <Book size={14} /> },
+        { id: 'edit', label: 'EDIT', icon: <Film size={14} /> },
+        { id: 'visual', label: 'VISUAL', icon: <ImageIcon size={14} /> },
+        { id: 'audio', label: 'AUDIO', icon: <Music size={14} /> },
+        { id: 'export', label: 'EXPORT', icon: <Share2 size={14} /> },
+    ];
+
     return (
-        <div className="h-screen w-screen bg-[#050505] text-white flex flex-col overflow-hidden font-sans selection:bg-red-500/30">
-            {/* Minimalist Top Nav */}
-            <header className="h-12 border-b border-[#1a1a1a] flex items-center justify-between px-6 bg-[#080808] z-50">
-                <div className="flex items-center space-x-4">
-                    <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center font-bold text-[10px]">
-                        ED
-                    </div>
-                    <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
-                        Epic Dreams <span className="text-gray-600">/</span>{' '}
-                        <span className="text-white">The Last Script</span>
-                    </h1>
-                </div>
-
-                <div className="flex items-center space-x-6 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                    <button className="hover:text-white transition-colors">Project</button>
-                    <button className="hover:text-white transition-colors">Export</button>
-                    <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center overflow-hidden">
-                        <div className="w-full h-full bg-gradient-to-tr from-red-900 to-red-500" />
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Workbench Area */}
-            <main className="flex-1 flex overflow-hidden relative">
-                {/* Visual Monitor Canvas */}
-                <Canvas />
-                
-                {/* Right Side Panels: AI Orchestrator & Properties */}
-                <div className="w-96 flex flex-col border-l border-[#1a1a1a] bg-[#0a0a0a] z-40 p-2 space-y-2">
-                    <div className="flex-1">
-                        <AIWorkbench />
-                    </div>
-                    <div className="h-auto">
-                        <ClipEditor />
-                    </div>
-                </div>
+        <div className="flex flex-col h-screen bg-[#050505] text-white overflow-hidden font-sans">
+            {/* Main Workspace Area */}
+            <main className="flex-1 relative overflow-hidden flex flex-col">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeWorkspace}
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.02 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="flex-1 flex flex-col overflow-hidden"
+                    >
+                        {renderWorkspace()}
+                    </motion.div>
+                </AnimatePresence>
 
                 {/* Mentor / Critic Panel (Floating) */}
                 <MentorPanel />
             </main>
 
-            {/* Cinematic Timeline */}
-            <footer className="h-72">
-                <Timeline />
-            </footer>
+            {/* DaVinci Style Bottom Bar */}
+            <nav className="h-12 bg-[#0a0a0a] border-t border-[#1a1a1a] flex items-center justify-center px-4 space-x-1 z-[100]">
+                {NAV_ITEMS.map((item) => {
+                    const isActive = activeWorkspace === item.id;
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => setWorkspace(item.id)}
+                            className={`flex flex-col items-center justify-center px-6 h-full transition-all group relative
+                                ${isActive ? 'text-white' : 'text-gray-500 hover:text-gray-300'}
+                            `}
+                        >
+                            <span className={`transition-transform duration-200 ${isActive ? 'scale-110 mb-0.5' : 'group-hover:scale-105 mb-0.5'}`}>
+                                {item.icon}
+                            </span>
+                            <span className={`text-[8px] font-bold tracking-[0.2em] transition-opacity ${isActive ? 'opacity-100' : 'opacity-40 group-hover:opacity-70'}`}>
+                                {item.label}
+                            </span>
+                            
+                            {/* Active Indicator Line */}
+                            {isActive && (
+                                <motion.div 
+                                    layoutId="activeTab"
+                                    className="absolute top-0 left-0 right-0 h-[2px] bg-red-600"
+                                />
+                            )}
+                        </button>
+                    );
+                })}
+            </nav>
 
             {/* Global Background Effects - Optimized */}
             <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
