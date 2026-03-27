@@ -37,6 +37,8 @@ interface TimelineState {
   removeClip: (track: TrackType, clipId: string) => void;
   setDragging: (dragging: boolean) => void;
   setFeasibilityScore: (score: number) => void;
+  addLog: (log: Omit<AgentLog, 'id' | 'timestamp'>) => void;
+  setScale: (scale: number) => void;
   setScrollX: (scrollX: number) => void;
   setSelectedClip: (id: string | null) => void;
   updateClipContent: (track: TrackType, clipId: string, content: string) => void;
