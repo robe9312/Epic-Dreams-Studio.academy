@@ -205,7 +205,7 @@ async def groq_chat(request: ChatRequest):
 # ── Production / Multi-Agent ──────────────────────────────────────────────────
 
 @app.get("/api/v2/production/stream")
-async def stream_production(prompt: str, api_key: str = Depends(verify_api_key)):
+async def stream_production(prompt: str, project_id: str = None, api_key: str = Depends(verify_api_key)):
     """
     Main AI Studio endpoint.
     Triggers multi-agent orchestration (Script → DP → Critic → Parser)
@@ -218,7 +218,7 @@ async def stream_production(prompt: str, api_key: str = Depends(verify_api_key))
 
     director = DirectorAgent()
     return StreamingResponse(
-        director.run_stream(prompt),
+        director.run_stream(prompt, project_id=project_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

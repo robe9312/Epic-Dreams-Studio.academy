@@ -14,6 +14,7 @@ class AgentState(TypedDict):
     feasibility_score: float
     feedback: str
     iterations: int
+    previous_context: str
 
 class DirectorAgent:
     """
@@ -29,7 +30,11 @@ class DirectorAgent:
         if state.get("feedback"):
              script = await self.script_agent.refined_script(state["script"], state["feedback"])
         else:
-             script = await self.script_agent.generate_script(state["idea"])
+             # Inyectar contexto previo si existe para coherencia narrativa
+             idea_with_context = state["idea"]
+             if state.get("previous_context"):
+                 idea_with_context = f"CONTEXTO PREVIO (Escenas anteriores):\n{state['previous_context']}\n\nNUEVA IDEA:\n{state['idea']}"
+             script = await self.script_agent.generate_script(idea_with_context)
         return {"script": script, "iterations": state.get("iterations", 0) + 1}
 
     async def plan_cinematography_node(self, state: AgentState):
@@ -87,19 +92,25 @@ class DirectorAgent:
 
         return workflow.compile()
 
-    async def run_stream(self, idea: str, owner_id: str = "system"):
+    async def run_stream(self, idea: str, project_id: str = None, owner_id: str = "system"):
         """
         Ejecuta la orquestación y emite eventos SSE para cada paso.
         Persiste los resultados en la base de datos Neon.
         """
         from app.services.event_manager import event_manager
         
-        # 1. Crear proyecto inicial en BD
-        project_id = db_service.create_project(
-            name=f"Production: {idea[:30]}...",
-            description=f"AI orchestrated production for: {idea}",
-            owner_id=owner_id
-        )
+        # 1. Recuperar contexto o crear proyecto
+        previous_script = ""
+        if project_id:
+            last_scene = db_service.get_last_scene(project_id)
+            if last_scene:
+                previous_script = last_scene.get("script_fountain", "")
+        else:
+            project_id = db_service.create_project(
+                name=f"Production: {idea[:30]}...",
+                description=f"AI orchestrated production for: {idea}",
+                owner_id=owner_id
+            )
 
         graph = self.build_graph()
         initial_state = {
@@ -109,7 +120,8 @@ class DirectorAgent:
             "shotlist": "",
             "feasibility_score": 0.0,
             "feedback": "",
-            "iterations": 0
+            "iterations": 0,
+            "previous_context": previous_script
         }
 
         yield event_manager.format_sse({"agent": "Director Agent", "message": "Starting production orchestration..."}, event="log")
@@ -128,6 +140,10 @@ class DirectorAgent:
                 }
                 
                 msg = messages.get(node_name, f"Node {node_name} complete.")
+                # Si el nodo es el Critic, enviar el feedback real si existe
+                if node_name == "critic" and output.get("feedback"):
+                    msg = output["feedback"]
+                
                 yield event_manager.format_sse({"agent": node_name.capitalize() + " Agent", "message": msg}, event="log")
                 
                 # PERSISTENCIA: Loguear acción en BD

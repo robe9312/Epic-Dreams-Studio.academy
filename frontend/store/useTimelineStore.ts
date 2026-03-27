@@ -28,6 +28,7 @@ interface TimelineState {
   scale: number; // Pixels per second
   scrollX: number; // Viewport horizontal offset
   selectedClipId: string | null;
+  activeAdvice: { agent: string; message: string } | null;
 
   
   // Acciones
@@ -41,6 +42,7 @@ interface TimelineState {
   setScale: (scale: number) => void;
   setScrollX: (scrollX: number) => void;
   setSelectedClip: (id: string | null) => void;
+  setAdvice: (advice: { agent: string; message: string } | null) => void;
   updateClipContent: (track: TrackType, clipId: string, content: string) => void;
   updateClip: (track: TrackType, clipId: string, partial: Partial<Clip>) => void;
   moveClip: (fromTrack: TrackType, toTrack: TrackType, clipId: string, newStartTime: number) => void;
@@ -61,6 +63,7 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   scale: 50, // 50 pixels per second default
   scrollX: 0,
   selectedClipId: null,
+  activeAdvice: null,
 
   setPlayhead: (time) => set({ playhead: Math.max(0, time) }),
 
@@ -99,6 +102,7 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   setScrollX: (scrollX) => set({ scrollX: Math.max(0, scrollX) }),
 
   setSelectedClip: (id) => set({ selectedClipId: id }),
+  setAdvice: (advice) => set({ activeAdvice: advice }),
 
   updateClipContent: (track, clipId, content) => set((state) => ({
     tracks: {

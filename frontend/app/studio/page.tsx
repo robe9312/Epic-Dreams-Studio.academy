@@ -5,6 +5,7 @@ import { Timeline } from '../../components/Timeline';
 import { Canvas } from '../../components/Canvas';
 import { AIWorkbench } from '../../components/AIWorkbench';
 import { ClipEditor } from '../../components/ClipEditor';
+import { MentorPanel } from '../../components/MentorPanel';
 
 export default function StudioPage() {
     return (
@@ -44,6 +45,9 @@ export default function StudioPage() {
                         <ClipEditor />
                     </div>
                 </div>
+
+                {/* Mentor / Critic Panel (Floating) */}
+                <MentorPanel />
             </main>
 
             {/* Cinematic Timeline */}

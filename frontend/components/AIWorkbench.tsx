@@ -11,7 +11,7 @@ export const AIWorkbench: React.FC = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     
     // Del store traemos los logs y la función de añadir al timeline
-    const { logs, addLog, appendClipAtPlayhead } = useTimelineStore();
+    const { logs, addLog, appendClipAtPlayhead, setAdvice } = useTimelineStore();
     
     // Auto-scroll para los logs
     const logsEndRef = useRef<HTMLDivElement>(null);
@@ -35,6 +35,11 @@ export const AIWorkbench: React.FC = () => {
             try {
                 const data = JSON.parse(e.data);
                 addLog({ agent: data.agent, message: data.message, type: 'info' });
+                
+                // Si es el Critic, lo mostramos elegantemente en el Mentor Panel
+                if (data.agent === 'Critic Agent') {
+                    setAdvice({ agent: 'Critic', message: data.message });
+                }
             } catch (err) {
                 console.error("Error parsing SSE log", err);
             }

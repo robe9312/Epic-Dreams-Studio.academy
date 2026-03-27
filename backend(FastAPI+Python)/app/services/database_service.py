@@ -133,6 +133,26 @@ class DatabaseService:
             logger.error(f"Error obteniendo escenas: {e}")
             return []
 
+    def get_last_scene(self, project_id: str) -> Optional[Dict[str, Any]]:
+        """Obtiene la última escena creada de un proyecto para dar contexto a la IA."""
+        try:
+            with self.get_session() as session:
+                result = session.execute(
+                    text("""
+                        SELECT id, title, "order", script_fountain, created_at
+                        FROM scenes
+                        WHERE project_id = :project_id
+                        ORDER BY "order" DESC
+                        LIMIT 1
+                    """),
+                    {"project_id": project_id}
+                )
+                row = result.fetchone()
+                return dict(row._mapping) if row else None
+        except SQLAlchemyError as e:
+            logger.error(f"Error obteniendo última escena: {e}")
+            return None
+
     # ==================== MÉTODOS PARA CLIPS ====================
     def create_clip(self, scene_id: str, track: str, content: Dict, start_time: float, end_time: float, order: int) -> Optional[str]:
         """Crea un clip en una escena."""
