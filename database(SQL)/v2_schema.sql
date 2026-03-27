@@ -7,7 +7,7 @@
 -- Si ya tienes una tabla de usuarios (por ejemplo, de Supabase Auth), 
 -- comenta esta sección y ajusta las referencias a `profiles`.
 CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     username TEXT UNIQUE,
     full_name TEXT,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     description TEXT,
-    owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    owner_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

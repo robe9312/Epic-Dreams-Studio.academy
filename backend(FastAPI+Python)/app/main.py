@@ -274,3 +274,60 @@ async def telegram_webhook(
     update = await request.json()
     background_tasks.add_task(procesar_update, update)
     return {"ok": True}
+
+# ── Clerk Webhook ─────────────────────────────────────────────────────────────
+
+@app.post("/api/v1/clerk/webhook")
+async def clerk_webhook(request: Request):
+    try:
+        from svix.webhooks import Webhook, WebhookVerificationError
+    except ImportError:
+        logger.error("svix package is not installed.")
+        raise HTTPException(status_code=500, detail="Server configuration error")
+        
+    CLERK_WEBHOOK_SECRET = os.getenv("CLERK_WEBHOOK_SECRET")
+    if not CLERK_WEBHOOK_SECRET:
+        logger.error("CLERK_WEBHOOK_SECRET not configured")
+        raise HTTPException(status_code=500, detail="CLERK_WEBHOOK_SECRET missing")
+        
+    payload = await request.body()
+    headers = request.headers
+    
+    # Extraer encabezados de svix
+    svix_id = headers.get("svix-id")
+    svix_timestamp = headers.get("svix-timestamp")
+    svix_signature = headers.get("svix-signature")
+    
+    if not svix_id or not svix_timestamp or not svix_signature:
+        raise HTTPException(status_code=400, detail="Missing svix headers")
+        
+    wh = Webhook(CLERK_WEBHOOK_SECRET)
+    try:
+        evt = wh.verify(payload, {
+            "svix-id": svix_id,
+            "svix-timestamp": svix_timestamp,
+            "svix-signature": svix_signature
+        })
+    except WebhookVerificationError as e:
+        logger.error(f"Clerk webhook verification failed: {e}")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+        
+    # Procesar evento
+    if evt['type'] in ['user.created', 'user.updated']:
+        data = evt['data']
+        user_id = data.get('id')
+        
+        email_addresses = data.get('email_addresses', [])
+        email = email_addresses[0]['email_address'] if email_addresses else ''
+        
+        username = data.get('username')
+        first_name = data.get('first_name') or ''
+        last_name = data.get('last_name') or ''
+        full_name = f"{first_name} {last_name}".strip()
+        
+        success = db_service.upsert_profile(user_id, email, username, full_name)
+        if not success:
+            logger.error(f"Failed to upsert Clerk user {user_id} into DB")
+            raise HTTPException(status_code=500, detail="Database sync failed")
+            
+    return {"success": True}

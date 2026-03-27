@@ -184,6 +184,32 @@ class DatabaseService:
             return False
 
     # ==================== MÉTODOS PARA PERFILES (si se usa) ====================
+    def upsert_profile(self, user_id: str, email: str, username: str, full_name: str) -> bool:
+        """Crea o actualiza un perfil basado en el ID de Clerk."""
+        try:
+            with self.get_session() as session:
+                session.execute(
+                    text("""
+                        INSERT INTO profiles (id, email, username, full_name)
+                        VALUES (:id, :email, :username, :full_name)
+                        ON CONFLICT (id) DO UPDATE SET 
+                            email = EXCLUDED.email,
+                            username = COALESCE(EXCLUDED.username, profiles.username),
+                            full_name = COALESCE(EXCLUDED.full_name, profiles.full_name)
+                    """),
+                    {
+                        "id": user_id, 
+                        "email": email, 
+                        "username": username, 
+                        "full_name": full_name
+                    }
+                )
+                session.commit()
+                return True
+        except SQLAlchemyError as e:
+            logger.error(f"Error upserting profile: {e}")
+            return False
+
     def get_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Obtiene un perfil por su UUID."""
         try:
