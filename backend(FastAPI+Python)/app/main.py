@@ -73,7 +73,9 @@ def get_groq_client() -> AsyncGroq:
     global _groq_client
     if _groq_client is None:
         if not GROQ_API_KEY:
+            logger.error("GROQ_API_KEY not configured. Groq client cannot be initialized.")
             raise HTTPException(status_code=500, detail="GROQ_API_KEY not configured")
+        logger.info("GROQ_API_KEY is configured. Initializing Groq client.")
         _groq_client = AsyncGroq(api_key=GROQ_API_KEY)
     return _groq_client
 
@@ -169,12 +171,31 @@ async def generate_storyboard(payload: Dict[str, Any], api_key: str = Depends(ve
     
     safe_prompt = urllib.parse.quote(prompt)
     image_url = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=1280&height=720&model=flux&nologo=true"
+    logger.info(f"Pollinations.ai Storyboard Request URL: {image_url}")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(image_url, timeout=30.0) # Add a timeout
+            response.raise_for_status() # Raise an exception for HTTP errors
+            logger.info(f"Pollinations.ai Storyboard Response Status: {response.status_code}")
+            logger.debug(f"Pollinations.ai Storyboard Response Content (first 500 chars): {response.text[:500]}")
+            # The actual image URL from Pollinations.ai is directly the request URL,
+            # so we don't need to parse a response body for a new URL.
+        except httpx.RequestError as exc:
+            logger.error(f"Pollinations.ai Storyboard - An error occurred while requesting {exc.request.url!r}: {exc}")
+            raise HTTPException(status_code=503, detail=f"Failed to connect to Pollinations.ai: {exc}")
+        except httpx.HTTPStatusError as exc:
+            logger.error(f"Pollinations.ai Storyboard - Error response {exc.response.status_code} while requesting {exc.request.url!r}: {exc.response.text}")
+            raise HTTPException(status_code=exc.response.status_code, detail=f"Pollinations.ai returned an error: {exc.response.text}")
+        except Exception as e:
+            logger.error(f"Pollinations.ai Storyboard - Unexpected error: {e}")
+            raise HTTPException(status_code=500, detail=f"Unexpected error with Pollinations.ai: {e}")
     
     if scene_id:
         try:
             db_service.save_storyboard(scene_id, image_url, prompt)
         except Exception as e:
-            logger.error(f"DB Error: {e}")
+            logger.error(f"DB Error saving storyboard: {e}")
             
     return {"status": "success", "image_url": image_url}
 
@@ -188,20 +209,29 @@ async def generate_music(payload: Dict[str, Any], api_key: str = Depends(verify_
     # Pollinations.AI Audio Endpoint (Free, Unlimited, No key required for basic GET)
     safe_prompt = urllib.parse.quote(prompt)
     audio_url = f"https://gen.pollinations.ai/audio/{safe_prompt}?model=music"
+    logger.info(f"Pollinations.ai Music Request URL: {audio_url}")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(audio_url, timeout=30.0) # Add a timeout
+            response.raise_for_status() # Raise an exception for HTTP errors
+            logger.info(f"Pollinations.ai Music Response Status: {response.status_code}")
+            logger.debug(f"Pollinations.ai Music Response Content (first 500 chars): {response.text[:500]}")
+        except httpx.RequestError as exc:
+            logger.error(f"Pollinations.ai Music - An error occurred while requesting {exc.request.url!r}: {exc}")
+            raise HTTPException(status_code=503, detail=f"Failed to connect to Pollinations.ai: {exc}")
+        except httpx.HTTPStatusError as exc:
+            logger.error(f"Pollinations.ai Music - Error response {exc.response.status_code} while requesting {exc.request.url!r}: {exc.response.text}")
+            raise HTTPException(status_code=exc.response.status_code, detail=f"Pollinations.ai returned an error: {exc.response.text}")
+        except Exception as e:
+            logger.error(f"Pollinations.ai Music - Unexpected error: {e}")
+            raise HTTPException(status_code=500, detail=f"Unexpected error with Pollinations.ai: {e}")
     
     if project_id:
         try:
             db_service.save_soundtrack(project_id, audio_url, prompt)
         except Exception as e:
-            logger.error(f"DB Error: {e}")
-            
-    return {"status": "success", "audio_url": audio_url, "description": prompt}
-
-    if project_id:
-        try:
-            db_service.save_soundtrack(project_id, audio_url, prompt)
-        except Exception as e:
-            logger.error(f"DB Error: {e}")
+            logger.error(f"DB Error saving soundtrack: {e}")
             
     return {"status": "success", "audio_url": audio_url, "description": prompt}
 
