@@ -192,7 +192,7 @@ async def generate_music(payload: Dict[str, Any], api_key: str = Depends(verify_
     else:
         try:
             output = replicate.run(
-                "meta/musicgen:671ac645ce5e52d1d00ef3b78223c03c2a3734e6",
+                "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
                 input={"prompt": prompt, "model_version": "stereo-large", "duration": 15}
             )
             audio_url = output if isinstance(output, str) else output[0]

@@ -92,10 +92,9 @@ class DirectorAgent:
 
         return workflow.compile()
 
-    async def run_stream(self, idea: str, project_id: str = None, owner_id: str = "system"):
+    async def run_stream(self, idea, project_id=None, owner_id="00000000-0000-0000-0000-000000000000"):
         """
-        Ejecuta la orquestación y emite eventos SSE para cada paso.
-        Persiste los resultados en la base de datos Neon.
+        Orquesta la producción completa y emite eventos por SSE.
         """
         from app.services.event_manager import event_manager
         
