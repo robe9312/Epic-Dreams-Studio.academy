@@ -9,18 +9,24 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 WORKDIR /code
 
-# Instalamos certificados, herramientas de diagnóstico de red y curl [cite: 1]
+# Instalamos certificados, herramientas de diagnóstico de red y dependencias de sistema para psycopg2
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl dnsutils && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    dnsutils \
+    gcc \
+    libpq-dev \
+    python3-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Instalamos librerías [cite: 2]
+# Instalamos librerías
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiamos el código
 COPY . .
 
-# Comando de arranque (Asegúrate de que el archivo se llame main.py en la raíz) [cite: 3]
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Comando de arranque optimizado usando el proxy de raíz
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
