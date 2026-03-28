@@ -28,5 +28,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiamos el código
 COPY . .
 
-# Comando de arranque optimizado usando el proxy de raíz
+# Comando de arranque: uviorn sobre el paquete app
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
