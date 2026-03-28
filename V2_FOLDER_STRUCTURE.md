@@ -35,7 +35,7 @@
   - `models/` - Pydantic & SQL schemas
 - `requirements.txt` - Python dependencies
 
-## 🗄️ Database (Supabase)
+## 🗄️ Database (neon)
 
 - `migrations/` - SQL versioning
 - `v2_schema.sql` - Core data model

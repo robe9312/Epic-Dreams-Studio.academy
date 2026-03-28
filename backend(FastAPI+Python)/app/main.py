@@ -7,7 +7,7 @@ import httpx
 import socket
 import logging
 import asyncio
-import replicate
+import asyncio
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -178,27 +178,24 @@ async def generate_storyboard(payload: Dict[str, Any], api_key: str = Depends(ve
             
     return {"status": "success", "image_url": image_url}
 
-# --- MUSIC (REPLICATE) ---
+# --- MUSIC (POLLINATIONS.AI - FREE & UNLIMITED) ---
 @app.post("/api/v1/ai/generate-music")
 async def generate_music(payload: Dict[str, Any], api_key: str = Depends(verify_api_key)):
     prompt = payload.get("prompt")
     project_id = payload.get("project_id")
     if not prompt: raise HTTPException(status_code=400, detail="Prompt missing")
     
-    token = os.getenv("REPLICATE_API_TOKEN")
-    if not token:
-        logger.warning("Token lacking, using placeholder")
-        audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-    else:
+    # Pollinations.AI Audio Endpoint (Free, Unlimited, No key required for basic GET)
+    safe_prompt = urllib.parse.quote(prompt)
+    audio_url = f"https://gen.pollinations.ai/audio/{safe_prompt}?model=music"
+    
+    if project_id:
         try:
-            output = replicate.run(
-                "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
-                input={"prompt": prompt, "model_version": "stereo-large", "duration": 15}
-            )
-            audio_url = output if isinstance(output, str) else output[0]
+            db_service.save_soundtrack(project_id, audio_url, prompt)
         except Exception as e:
-            logger.error(f"Replicate error: {e}")
-            audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            logger.error(f"DB Error: {e}")
+            
+    return {"status": "success", "audio_url": audio_url, "description": prompt}
 
     if project_id:
         try:

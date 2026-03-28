@@ -16,4 +16,4 @@ sqlalchemy==2.0.29
 svix==1.24.0
 replicate==1.0.4
 
-# NOTE: 'supabase' removed — project migrated to Neon/Postgres via psycopg2
+# NOTE: 'supabase' removed — project migrated to Neon/Postgres via psycopg2, Reemplaza Replicate con Pollinations 

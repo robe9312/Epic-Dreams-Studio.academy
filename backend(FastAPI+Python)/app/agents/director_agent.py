@@ -105,6 +105,10 @@ class DirectorAgent:
             if last_scene:
                 previous_script = last_scene.get("script_fountain", "")
         else:
+            # Asegurar perfil de sistema si se usa el default
+            if owner_id == "00000000-0000-0000-0000-000000000000":
+                db_service.ensure_system_profile()
+                
             project_id = db_service.create_project(
                 name=f"Production: {idea[:30]}...",
                 description=f"AI orchestrated production for: {idea}",

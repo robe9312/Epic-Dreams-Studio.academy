@@ -290,6 +290,15 @@ class DatabaseService:
             return False
 
     # ==================== MÉTODOS PARA PERFILES (si se usa) ====================
+    def ensure_system_profile(self) -> bool:
+        """Asegura que el perfil de sistema (zero UUID) existe para acciones automáticas."""
+        return self.upsert_profile(
+            user_id="00000000-0000-0000-0000-000000000000",
+            email="system@epicdreams.studio",
+            username="system",
+            full_name="Epic Dreams System"
+        )
+
     def upsert_profile(self, user_id: str, email: str, username: str, full_name: str) -> bool:
         """Crea o actualiza un perfil basado en el ID de Clerk."""
         try:
