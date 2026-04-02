@@ -1,4 +1,4 @@
-# 🎬 Epic Dreams Studio Academy
+# 🎬 Epic Dreams Studio Academy V2
 
 > **"Del guion al render en un solo tab."**  
 > El primer ecosistema de producción cinematográfica en la nube, aumentado por IA y diseñado para la nueva era del cine independiente.
@@ -7,7 +7,7 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Neon](https://img.shields.io/badge/Database-Neon%20Postgres-00E599?logo=postgresql)](https://neon.tech/)
 [![Groq](https://img.shields.io/badge/AI-Groq%20Llama%203.3-orange)](https://groq.com/)
-[![Status](https://img.shields.io/badge/Status-MVP%20Phase-yellow)](#)
+[![License](https://img.shields.io/badge/License-Proprietary-red)](#license)
 
 ---
 
@@ -28,29 +28,31 @@ Nuestra "Virtual Film Crew" utiliza **Llama 3.3 (vía Groq)** para simular depar
 - **Director Agent:** Orquesta el flujo de trabajo y realiza auditorías de viabilidad.
 - **Script Agent:** Especialista en narrativa dramática y diálogos.
 - **DP Agent:** Traduce escenas a planos técnicos (lentes, iluminación, encuadres).
-- **Continuity Agent:** Garantiza la coherencia narrativa entre escenas.
 
 ## 🛠️ Stack Tecnológico
 - **Frontend:** Next.js 14, TypeScript, Tailwind CSS, Framer Motion, Zustand.
 - **Backend:** FastAPI (Hugging Face Docker), LangGraph para orquestación de agentes.
-- **Base de Datos:** Neon Postgres (Serverless SQL) con Database Branching.
+- **Base de Datos:** Neon Postgres (Serverless SQL).
 - **Almacenamiento:** Sistema híbrido Telegram Bot API (Assets) + YouTube Data API v3 (Video).
-- **Autenticación:** Clerk (Auth & User Profiles).
 
 ## 📡 Infraestructura Cloud
-El proyecto utiliza un pipeline de despliegue continuo (CI/CD) altamente eficiente:
-- **Frontend:** Desplegado en [Vercel](https://vercel.com).
-- **Backend:** Desplegado en [Hugging Face Spaces](https://huggingface.co/spaces).
-- **Sincronización:** GitHub Actions para el despliegue automático del backend y esquemas SQL.
+- **Frontend:** [Vercel](https://vercel.com).
+- **Backend:** [Hugging Face Spaces](https://huggingface.co/spaces).
+- **CI/CD:** GitHub Actions para despliegue automático de backend y esquemas SQL.
 
-## 🛠️ Configuración Rápida
-Si deseas clonar y probar el entorno localmente:
-```bash
-# Instalar dependencias del frontend
-cd frontend && npm install
+---
 
-# Instalar dependencias del backend
-cd backend && pip install -r requirements.txt
+## ⚖️ Licencia (License)
+**Copyright (c) 2026 Robe. Todos los derechos reservados.**
 
-# Configurar variables (.env)
-# DATABASE_URL, GROQ_API_KEY, TELEGRAM_BOT_TOKEN, YT_REFRESH_TOKEN...
+Este repositorio es **PROPIETARIO**. Se permite el acceso público al código únicamente con fines de **exhibición de portafolio y revisión educativa**. 
+
+**Queda estrictamente prohibido:**
+- La copia, distribución o reproducción total o parcial del código.
+- El uso del código para crear trabajos derivados o productos comerciales.
+- El despliegue de esta arquitectura en servidores públicos o privados sin autorización.
+
+Para obtener una licencia de uso, colaboración o consultas comerciales, por favor contacta directamente con el autor a través de su perfil de GitHub.
+
+---
+**Epic Dreams Studio Academy V2** — Desarrollado por [Robe](https://github.com/robe9312) 🎬🏆🚀
