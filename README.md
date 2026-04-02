@@ -1,4 +1,4 @@
-# 🎬 Epic Dreams Studio Academy V2
+# 🎬 Epic Dreams Studio: Academy
 
 > **"Del guion al render en un solo tab."**  
 > El primer ecosistema de producción cinematográfica en la nube, aumentado por IA y diseñado para la nueva era del cine independiente.
@@ -12,7 +12,7 @@
 ---
 
 ## 🚀 La Visión
-**Epic Dreams Studio Academy V2** no es solo un editor; es un equipo de cine completo viviendo en tu navegador. Hemos fusionado una academia de cine de élite con un estudio de post-producción profesional, eliminando las barreras de hardware y coste mediante una arquitectura de agentes de IA y almacenamiento híbrido infinito.
+**Epic Dreams Studio Academy** no es solo un editor; es un equipo de cine completo viviendo en tu navegador. Hemos fusionado una academia de cine de élite con un estudio de post-producción profesional, eliminando las barreras de hardware y coste mediante una arquitectura de agentes de IA y almacenamiento híbrido infinito.
 
 ## 🏗️ Espacios de Trabajo (Workspaces)
 Inspirados en el flujo de trabajo de **DaVinci Resolve**, hemos dividido la producción en 5 contextos especializados:
