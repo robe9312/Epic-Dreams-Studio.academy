@@ -5,7 +5,7 @@ colorFrom: purple
 colorTo: red
 sdk: docker
 pinned: false
-license: mit
+license: other
 ---
 
 # 🚀 Epic Dreams Studio Academy: AI Backend Engine 
@@ -33,3 +33,15 @@ Motor de orquestación cinematográfica con agentes de IA que gestiona producci�
 
 ---
 **Epic Dreams Studio Academy V2** - *Del guion al render en un solo tab.* 🎬
+
+---
+## ⚖️ Licencia (License)
+**Copyright (c) 2026 Robe. Todos los derechos reservados.**
+
+Este Space y su código fuente son **PROPIETARIOS**. Se permite el acceso público únicamente con fines de revisión educativa y demostración de funcionalidades. 
+
+**Queda estrictamente prohibido:**
+- La copia, clonación o redistribución del código de este Space.
+- El uso de esta API para aplicaciones de terceros sin consentimiento.
+- La explotación comercial de la arquitectura de agentes aquí presentada.
+---
