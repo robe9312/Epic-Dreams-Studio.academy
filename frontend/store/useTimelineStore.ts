@@ -178,9 +178,9 @@ export const useTimelineStore = create<TimelineState>()(
   maxHistorySize: 50,
 
   // Acciones básicas
-  setPlayhead: (time) => set({ playhead: Math.max(0, time) }),
+  setPlayhead: (time: number) => set({ playhead: Math.max(0, time) }),
 
-  setTracks: (tracks) => set({ tracks }),
+  setTracks: (tracks: Record<string, Clip[]>) => set({ tracks }),
 
   addClip: (track, clip) => {
     const state = get();
