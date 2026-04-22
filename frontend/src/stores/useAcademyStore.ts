@@ -314,3 +314,4 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
     });
   }
 }));
+// Force rebuild trigger
