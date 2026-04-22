@@ -182,7 +182,7 @@ export const useTimelineStore = create<TimelineState>()(
 
   setTracks: (tracks: Record<string, Clip[]>) => set({ tracks }),
 
-  addClip: (track, clip) => {
+  addClip: (track: string, clip: Clip) => {
     const state = get();
     const historyUpdate = pushToHistory(state, { type: 'ADD_CLIP', clip, track });
     
@@ -195,7 +195,7 @@ export const useTimelineStore = create<TimelineState>()(
     }));
   },
 
-  removeClip: (track, clipId) => {
+  removeClip: (track: string, clipId: string) => {
     const state = get();
     const clipToRemove = state.tracks[track].find(c => c.id === clipId);
     if (!clipToRemove) return;
