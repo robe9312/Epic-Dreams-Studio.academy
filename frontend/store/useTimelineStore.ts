@@ -211,9 +211,9 @@ export const useTimelineStore = create<TimelineState>()(
     }));
   },
 
-  setDragging: (dragging) => set({ isDragging: dragging }),
+  setDragging: (dragging: boolean) => set({ isDragging: dragging }),
 
-  setFeasibilityScore: (score) => set({ feasibilityScore: score }),
+  setFeasibilityScore: (score: number) => set({ feasibilityScore: score }),
 
   addLog: (log) => set((state) => ({
     logs: [
