@@ -74,10 +74,10 @@ Gestionada mediante la sinergia de **LangGraph** y **OpenFang Agent OS** para op
 ## 🚧 7. Hoja de Ruta (Roadmap) y Próximos Pasos Inmediatos
 
 ### Tareas Inmediatas (Foco Actual)
-- [ ] Timeline: Implementar sistema robusto de **Drag & Drop** para clips.
-- [ ] Timeline: Funcionalidad de **Trimming** (recorte) de clips.
+- [x] Timeline: Implementar sistema robusto de **Drag & Drop** para clips.
+- [x] Timeline: Funcionalidad de **Trimming** (recorte) de clips.
 - [x] Timeline: Regla de tiempo dinámica (**Dynamic Time Ruler**) basada en Canvas.
-- [ ] Autenticación de Usuarios (Clerk o Neon Auth).
+- [x] Autenticación de Usuarios (Auth.js / NextAuth).
 
 ### Fases Estratégicas
 - **Fase 1 (Validación):** Terminar landing page, flujo principal de co-creación y validar en comunidades (Reddit, IndieHackers).
