@@ -1,30 +1,26 @@
-import NextAuth from "next-auth";
-import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
+// auth.ts - VERSION TEMPORAL (AUTH DESACTIVADO)
+// Esta versión no requiere variables de entorno y permite el acceso total.
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    GitHub,
-    Google,
-  ],
-  callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isOnStudio = nextUrl.pathname.startsWith('/studio');
-      if (isOnStudio) {
-        if (isLoggedIn) return true;
-        return false; // Redirect to login
-      }
-      return true;
+export const handlers = { GET: () => new Response("OK"), POST: () => new Response("OK") };
+export const signIn = async () => {};
+export const signOut = async () => {};
+
+// Mock del objeto auth para que siempre devuelva una sesión de invitado o null sin explotar
+export const auth = async () => {
+  return {
+    user: {
+      name: "Invitado (Modo Desarrollo)",
+      email: "guest@epicdreams.ai",
+      id: "guest",
+      role: "admin" // Para que no te bloquee nada
     },
-    session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login",
-  },
+    expires: new Date(Date.now() + 3600 * 1000).toISOString()
+  };
+};
+
+export const NextAuth = () => ({
+  handlers,
+  auth,
+  signIn,
+  signOut
 });

@@ -1,5 +1,7 @@
-export { auth as middleware } from "../auth"
+// export { auth as middleware } from "../auth"
+// 
+// export const config = {
+//   matcher: ["/studio/:path*", "/academy/mentor/:path*"],
+// }
 
-export const config = {
-  matcher: ["/studio/:path*", "/academy/mentor/:path*"],
-}
+export default function middleware() {}
