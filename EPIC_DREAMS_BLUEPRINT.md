@@ -3,6 +3,9 @@
 > **"Del guion al render en un solo tab."**
 > Guía Maestra de Arquitectura, Visión y Estado del Proyecto. Este documento sirve como punto de verdad absoluto para mantener el contexto en sesiones de desarrollo y revisiones externas.
 
+> [!IMPORTANT]
+> **Contexto Expandido:** Toda la documentación profunda y el conocimiento acumulado de Epic Dreams reside en **NotebookLM**. Siempre que sea posible, se recomienda consultar el cuaderno para recuperar contexto histórico o decisiones de diseño complejas.
+
 ---
 
 ## 🚀 1. La Visión Principal
