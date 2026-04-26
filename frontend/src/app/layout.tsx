@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import AuthButton from '@/components/shared/AuthButton'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,9 +26,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={inter.variable}>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased bg-[#050505]">
         <header className="absolute top-0 right-0 p-4 z-50">
-          {/* Auth UI will be placed here (Sign In / User Menu) */}
+          <AuthButton />
         </header>
         {children}
       </body>
