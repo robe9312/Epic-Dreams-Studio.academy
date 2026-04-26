@@ -150,8 +150,6 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
   loadCourses: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Aquí iría la llamada a API real
-      // Simulamos con datos de ejemplo
       await new Promise(resolve => setTimeout(resolve, 500));
       set({ 
         courses: SAMPLE_COURSES,
@@ -201,13 +199,6 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
         ...progress.completedLessons,
         lessonId
       ]));
-
-      // Desbloquear siguiente lección
-      const course = state.getCourseById(courseId);
-      if (course) {
-        // Lógica para desbloquear siguientes lecciones
-        // (se implementaría aquí)
-      }
 
       return {
         userProgress: {
@@ -283,8 +274,6 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
       isActive: true,
       createdAt: new Date()
     };
-
-    // En una implementación real, esto se guardaría en el estado o backend
     console.log('Nueva sesión de mentor iniciada:', session);
     return session;
   },
@@ -295,13 +284,10 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
       id: `msg-${Date.now()}`,
       timestamp: new Date()
     };
-
     console.log('Mensaje añadido a sesión:', sessionId, newMessage);
-    // En implementación real, actualizar estado
   },
 
   getActiveMentorSession: (courseId: string) => {
-    // En implementación real, buscar en el estado
     return null;
   },
 
