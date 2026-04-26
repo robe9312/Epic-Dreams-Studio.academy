@@ -10,7 +10,7 @@ import { useTimelineStore } from '../../../store/useTimelineStore';
 const STORYBOARD_CLIP_DURATION = 4;
 
 export const VisualWorkspace: React.FC = () => {
-    const { storyboards, addStoryboard, removeStoryboard, error, setError } = useProjectStore();
+    const { storyboards, addStoryboard, removeStoryboard, error, setError, currentSceneId } = useProjectStore();
     const { tracks, addClip, addLog } = useTimelineStore();
 
     const [prompt, setPrompt] = useState('An astronaut floating in space looking at a distant nebula, cinematic lighting, 8k');
@@ -34,7 +34,7 @@ export const VisualWorkspace: React.FC = () => {
                     },
                     body: JSON.stringify({
                         prompt,
-                        scene_id: `scene-${Date.now()}`, // unique scene ID per generation
+                        scene_id: currentSceneId, // use valid UUID from store
                     }),
                 }
             );

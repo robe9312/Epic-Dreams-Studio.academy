@@ -59,6 +59,25 @@ CREATE TABLE IF NOT EXISTS public.agent_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 7. STORYBOARDS (VISUAL ASSETS)
+CREATE TABLE IF NOT EXISTS public.storyboards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    scene_id UUID REFERENCES public.scenes(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 8. SOUNDTRACKS (AUDIO ASSETS)
+CREATE TABLE IF NOT EXISTS public.soundtracks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
+    audio_url TEXT NOT NULL,
+    description TEXT,
+    type TEXT DEFAULT 'music',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================
 -- ÍNDICES PARA OPTIMIZAR CONSULTAS
 -- ============================================================

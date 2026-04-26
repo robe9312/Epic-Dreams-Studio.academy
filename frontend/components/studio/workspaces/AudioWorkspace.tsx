@@ -5,7 +5,7 @@ import { Music, Mic, Volume2, Sparkles, Play } from 'lucide-react';
 import { useProjectStore } from '../../../store/useProjectStore';
 
 export const AudioWorkspace: React.FC = () => {
-    const { soundtracks, addSoundtrack } = useProjectStore();
+    const { soundtracks, addSoundtrack, currentProjectId } = useProjectStore();
     const [prompt, setPrompt] = useState('Epic orchestral music with heavy drums and space synth');
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -17,7 +17,7 @@ export const AudioWorkspace: React.FC = () => {
                 headers: { 'Content-Type': 'application/json', 'X-API-Key': 'epic_dreams_secret_2026' },
                 body: JSON.stringify({ 
                     prompt,
-                    project_id: 'fad5716c-4545-49a8-9309-2b17f8de188b'
+                    project_id: currentProjectId
                 })
             });
             const data = await response.json();

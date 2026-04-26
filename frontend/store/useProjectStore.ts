@@ -20,6 +20,8 @@ interface ProjectState {
   activeWorkspace: WorkspaceType;
   storyboards: Storyboard[];
   soundtracks: Soundtrack[];
+  currentProjectId: string;
+  currentSceneId: string;
   isLoading: boolean;
   error: string | null;
   
@@ -30,6 +32,7 @@ interface ProjectState {
   addSoundtrack: (soundtrack: Soundtrack) => void;
   setError: (error: string | null) => void;
   loadInitialAssets: (projectId: string) => Promise<void>;
+  setProjectIds: (projectId: string, sceneId: string) => void;
 }
 
 const API_BASE_URL = 'https://epicdreams-epic-dreams-backend.hf.space';
@@ -39,11 +42,15 @@ export const useProjectStore = create<ProjectState>((set) => ({
   activeWorkspace: 'edit',
   storyboards: [],
   soundtracks: [],
+  // Default placeholder UUIDs (should be updated on project load)
+  currentProjectId: '00000000-0000-0000-0000-000000000000',
+  currentSceneId: '00000000-0000-0000-0000-000000000000',
   isLoading: false,
   error: null,
 
   setWorkspace: (workspace) => set({ activeWorkspace: workspace }),
   setError: (error) => set({ error }),
+  setProjectIds: (projectId, sceneId) => set({ currentProjectId: projectId, currentSceneId: sceneId }),
 
   // Accumulate ALL frames with a unique ID each — never overwrite
   addStoryboard: (storyboard) => set((state) => ({
