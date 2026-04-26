@@ -12,7 +12,8 @@ export const auth = async () => {
       name: "Invitado (Modo Desarrollo)",
       email: "guest@epicdreams.ai",
       id: "guest",
-      role: "admin" // Para que no te bloquee nada
+      role: "admin",
+      image: null // Añadido para evitar error de tipos
     },
     expires: new Date(Date.now() + 3600 * 1000).toISOString()
   };
