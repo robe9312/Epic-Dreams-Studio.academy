@@ -184,7 +184,7 @@ export default function MentorPage() {
       </div>
 
       {/* Preguntas Rápidas */}
-      {messages.length <= 2 && (
+      {currentSession.messages.length <= 2 && (
         <div className="px-6 pb-4">
           <div className="max-w-5xl mx-auto">
             <p className="text-sm text-gray-400 mb-3 flex items-center gap-2">
@@ -221,7 +221,7 @@ export default function MentorPage() {
               onKeyPress={handleKeyPress}
               placeholder="Escribe tu pregunta sobre cine..."
               className="flex-1 bg-gray-800/50 border border-gray-700 focus:border-purple-500 rounded-xl px-5 py-3 text-white placeholder-gray-500 outline-none transition-colors"
-              disabled={isTyping}
+              disabled={currentSession.status === 'thinking'}
             />
             <button
               onClick={handleSend}

@@ -5,7 +5,8 @@ import type {
   UserProgress, 
   Lesson,
   MentorSession,
-  MentorMessage 
+  MentorMessage,
+  MentorRole
 } from '@/types/academy';
 
 // Datos de ejemplo para cursos iniciales
@@ -127,10 +128,10 @@ interface AcademyActions {
   getCourseProgress: (courseId: string) => number; // porcentaje
   
   // Mentor
-  startMentorSession: (courseId: string) => void;
-  addMentorMessage: (sessionId: string, message: Omit<MentorMessage, 'id' | 'timestamp'>) => void;
-  sendMessageToMentor: (courseId: string, message: string, role: MentorRole) => Promise<void>;
-  getActiveMentorSession: (courseId: string) => MentorSession | null;
+  startMentorSession: (courseId: string, role: string) => void;
+  addMentorMessage: (courseId: string, role: string, message: Omit<MentorMessage, 'id' | 'timestamp'>) => void;
+  sendMessageToMentor: (courseId: string, message: string, role: string) => Promise<void>;
+  getActiveMentorSession: (courseId: string, role: string) => MentorSession | null;
   
   // Utilidades
   resetProgress: (courseId: string) => void;
@@ -268,18 +269,18 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
   },
 
   // Acciones - Mentor
-  startMentorSession: (courseId: string) => {
-    const existing = get().mentorSessions[courseId];
+  startMentorSession: (courseId: string, role: string) => {
+    const existing = get().mentorSessions[courseId]?.[role];
     if (existing) return;
 
     const session: MentorSession = {
-      id: `session-${Date.now()}`,
+      id: `session-${courseId}-${role}-${Date.now()}`,
       courseId,
       messages: [
         {
           id: 'welcome',
           sender: 'mentor',
-          content: '¡Hola! Soy tu mentor para este curso. ¿En qué puedo ayudarte hoy?',
+          content: `¡Hola! Soy tu mentor especializado en ${role}. ¿En qué puedo ayudarte hoy?`,
           timestamp: new Date()
         }
       ],
@@ -290,12 +291,15 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
     set((state) => ({
       mentorSessions: {
         ...state.mentorSessions,
-        [courseId]: session
+        [courseId]: {
+          ...(state.mentorSessions[courseId] || {}),
+          [role]: session
+        }
       }
     }));
   },
 
-  addMentorMessage: (sessionId: string, message: Omit<MentorMessage, 'id' | 'timestamp'>) => {
+  addMentorMessage: (courseId: string, role: string, message: Omit<MentorMessage, 'id' | 'timestamp'>) => {
     const newMessage: MentorMessage = {
       ...message,
       id: `msg-${Date.now()}`,
@@ -303,25 +307,45 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
     };
 
     set((state) => {
-      const newSessions = { ...state.mentorSessions };
-      for (const courseId in newSessions) {
-        if (newSessions[courseId].id === sessionId) {
-          newSessions[courseId] = {
-            ...newSessions[courseId],
-            messages: [...newSessions[courseId].messages, newMessage]
-          };
+      const courseSessions = state.mentorSessions[courseId] || {};
+      const session = courseSessions[role];
+      
+      if (!session) return state;
+
+      return {
+        mentorSessions: {
+          ...state.mentorSessions,
+          [courseId]: {
+            ...courseSessions,
+            [role]: {
+              ...session,
+              messages: [...session.messages, newMessage]
+            }
+          }
         }
-      }
-      return { mentorSessions: newSessions };
+      };
     });
   },
 
   sendMessageToMentor: async (courseId: string, message: string, role: string) => {
-    const session = get().mentorSessions[courseId];
+    const session = get().mentorSessions[courseId]?.[role];
     if (!session) return;
 
-    // 1. Añadir mensaje del usuario localmente
-    get().addMentorMessage(session.id, {
+    // 1. Añadir mensaje del usuario localmente y poner en modo thinking
+    set((state) => ({
+      mentorSessions: {
+        ...state.mentorSessions,
+        [courseId]: {
+          ...state.mentorSessions[courseId],
+          [role]: {
+            ...session,
+            status: 'thinking'
+          }
+        }
+      }
+    }));
+
+    get().addMentorMessage(courseId, role, {
       sender: 'user',
       content: message
     });
@@ -347,22 +371,48 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
 
       const data = await response.json();
 
-      // 3. Añadir respuesta del mentor
-      get().addMentorMessage(session.id, {
+      // 3. Añadir respuesta del mentor y volver a idle
+      get().addMentorMessage(courseId, role, {
         sender: 'mentor',
         content: data.response
       });
+
+      set((state) => ({
+        mentorSessions: {
+          ...state.mentorSessions,
+          [courseId]: {
+            ...state.mentorSessions[courseId],
+            [role]: {
+              ...state.mentorSessions[courseId][role],
+              status: 'idle'
+            }
+          }
+        }
+      }));
     } catch (error) {
       console.error('Error enviando mensaje al mentor:', error);
-      get().addMentorMessage(session.id, {
+      get().addMentorMessage(courseId, role, {
         sender: 'mentor',
         content: 'Perdona, he tenido un problema técnico. ¿Podrías repetirme eso?'
       });
+      
+      set((state) => ({
+        mentorSessions: {
+          ...state.mentorSessions,
+          [courseId]: {
+            ...state.mentorSessions[courseId],
+            [role]: {
+              ...state.mentorSessions[courseId][role],
+              status: 'idle'
+            }
+          }
+        }
+      }));
     }
   },
 
-  getActiveMentorSession: (courseId: string) => {
-    return get().mentorSessions[courseId] || null;
+  getActiveMentorSession: (courseId: string, role: string) => {
+    return get().mentorSessions[courseId]?.[role] || null;
   },
 
   // Utilidades

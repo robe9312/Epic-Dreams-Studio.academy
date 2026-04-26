@@ -15,12 +15,12 @@ export default function MentorChat({ courseId, mentor }: MentorChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const { getActiveMentorSession, sendMessageToMentor, startMentorSession } = useAcademyStore();
-  const session = getActiveMentorSession(courseId);
+  const session = getActiveMentorSession(courseId, mentor.role);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && !session) {
-      startMentorSession(courseId);
+      startMentorSession(courseId, mentor.role);
     }
   }, [isOpen, session, courseId, startMentorSession]);
 

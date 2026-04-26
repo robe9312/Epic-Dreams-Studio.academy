@@ -82,7 +82,7 @@ export interface UserProgress {
 export interface AcademyState {
   courses: Course[];
   userProgress: Record<string, UserProgress>; // courseId -> progress
-  mentorSessions: Record<string, MentorSession>; // courseId -> session
+  mentorSessions: Record<string, Record<string, MentorSession>>; // courseId -> role -> session
   activeCourseId: string | null;
   activeLessonId: string | null;
   isLoading: boolean;
@@ -102,6 +102,7 @@ export interface MentorSession {
   courseId: string;
   messages: MentorMessage[];
   isActive: boolean;
+  status?: AgentStatus;
   createdAt: Date;
 }
 
