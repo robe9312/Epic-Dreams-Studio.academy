@@ -36,11 +36,16 @@ class GroqClient:
             if chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
-    async def fast_completion(self, prompt: str) -> str:
+    async def fast_completion(self, prompt: str, system_prompt: str = "") -> str:
         """Respuesta rápida sin streaming para tareas de fondo."""
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        
         response = await self.client.chat.completions.create(
             model=self.model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             temperature=0.2, # Menor temperatura para lógica técnica
         )
         return response.choices[0].message.content

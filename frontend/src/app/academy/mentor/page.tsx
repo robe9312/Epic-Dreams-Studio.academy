@@ -7,7 +7,7 @@ import { useAcademyStore } from '@/store/useAcademyStore';
 
 interface Message {
   id: string;
-  sender: 'user' | 'ai';
+  sender: 'user' | 'mentor';
   content: string;
   timestamp: Date;
 }
@@ -124,11 +124,11 @@ export default function MentorPage() {
               >
                 {/* Avatar */}
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  message.sender === 'ai' 
+                  message.sender === 'mentor' 
                     ? 'bg-gradient-to-br from-purple-500 to-blue-500' 
                     : 'bg-gradient-to-br from-gray-600 to-gray-700'
                 }`}>
-                  {message.sender === 'ai' ? (
+                  {message.sender === 'mentor' ? (
                     <Bot className="w-5 h-5 text-white" />
                   ) : (
                     <User className="w-5 h-5 text-white" />
@@ -140,7 +140,7 @@ export default function MentorPage() {
                   message.sender === 'user' ? 'text-right' : ''
                 }`}>
                   <div className={`inline-block px-5 py-3 rounded-2xl ${
-                    message.sender === 'ai'
+                    message.sender === 'mentor'
                       ? 'bg-gray-800/80 backdrop-blur-sm text-gray-100 rounded-tl-none border border-gray-700/50'
                       : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-tr-none'
                   }`}>
