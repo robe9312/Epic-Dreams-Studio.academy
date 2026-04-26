@@ -21,6 +21,8 @@ from app.services.database_service import db_service
 from app.services.youtube_service import YouTubeService
 from app.services.telegram_storage import TelegramStorage
 from app.agents.director_agent import DirectorAgent
+from app.agents.mentor_agent import MentorAgent
+from app.services.groq_client import GroqClient
 
 telegram_service = TelegramStorage()
 
@@ -60,6 +62,12 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     prompt: str
     model: str = "llama-3.3-70b-versatile"
+
+class MentorChatRequest(BaseModel):
+    message: str
+    role: str = "director"
+    history: List[Dict[str, str]] = []
+    user_id: Optional[str] = "anonymous"
 
 # ── Env vars ──────────────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -245,3 +253,35 @@ async def update_production_clip(clip_id: str, data: Dict[str, Any], api_key: st
     success = db_service.update_clip(clip_id, data)
     if not success: raise HTTPException(status_code=500, detail="DB Update failed")
     return {"status": "success", "clip_id": clip_id}
+# --- ACADEMY MENTOR ---
+@app.post(/"api/v1/academy/mentor/chat/")
+async def mentor_chat(payload: MentorChatRequest):
+    mentor = MentorAgent(role=payload.role)
+    result = await mentor.run_chat(
+        user_id=payload.user_id,
+        message=payload.message,
+        role=payload.role,
+        history=payload.history
+    )
+    return result
+
+@app.get(/"api/v1/academy/mentor/stream/")
+async def stream_mentor_chat(
+    message: str, 
+    role: str = /"director/", 
+    user_id: str = /"anonymous/",
+    api_key: str = Depends(verify_api_key)
+):
+    mentor = MentorAgent(role=role)
+    identity = mentor.identities.get(role, mentor.identities[/"director/"])
+    
+    groq = GroqClient()
+    
+    return StreamingResponse(
+        groq.stream_chat(
+            prompt=f/"Estudiante: {message}\n\n{identity['name']}:/",
+            system_prompt=identity[/"system_prompt/"]
+        ),
+        media_type=/"text/event-stream/",
+        headers={/"Cache-Control/": /"no-cache/", /"X-Accel-Buffering/": /"no/"}
+)

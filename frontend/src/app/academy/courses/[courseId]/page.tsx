@@ -10,6 +10,8 @@ import {
   Play, CheckCircle, Lock, ChevronDown, ChevronRight, 
   FileText, HelpCircle, Film, ArrowLeft, Award 
 } from 'lucide-react';
+import MentorChat from '@/components/academy/MentorChat';
+import { AcademyMentor } from '@/types/academy';
 
 const LessonIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -348,6 +350,22 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Mentor Chat */}
+      {isEnrolled && (
+        <MentorChat 
+          courseId={courseId} 
+          mentor={{
+            id: 'mentor-1',
+            name: course.instructor.name,
+            role: 'director', // Default role for main instructor
+            avatar: course.instructor.avatar,
+            bio: course.instructor.bio,
+            agentId: 'director-agent',
+            status: 'idle'
+          }} 
+        />
+      )}
     </div>
   );
 }

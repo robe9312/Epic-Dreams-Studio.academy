@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAcademyStore } from '@/store/useAcademyStore';
 import { BookOpen, Play, Award, Clock, Users, Star, ChevronRight, Lock } from 'lucide-react';
+import MentorChat from '@/components/academy/MentorChat';
 
 const CourseCard = ({ course, progress }: { course: any; progress?: number }) => {
   return (
@@ -286,6 +287,20 @@ export default function AcademyDashboard() {
           </div>
         </section>
       </div>
+
+      {/* Global Mentor Chat */}
+      <MentorChat 
+        courseId="global" 
+        mentor={{
+          id: 'global-mentor',
+          name: 'Directora Ana García',
+          role: 'director',
+          avatar: '/images/instructors/ana.jpg',
+          bio: 'Directora con 20 años de experiencia.',
+          agentId: 'director-agent',
+          status: 'idle'
+        }} 
+      />
     </div>
   );
 }

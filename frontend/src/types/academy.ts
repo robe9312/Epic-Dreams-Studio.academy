@@ -82,6 +82,7 @@ export interface UserProgress {
 export interface AcademyState {
   courses: Course[];
   userProgress: Record<string, UserProgress>; // courseId -> progress
+  mentorSessions: Record<string, MentorSession>; // courseId -> session
   activeCourseId: string | null;
   activeLessonId: string | null;
   isLoading: boolean;
@@ -102,4 +103,17 @@ export interface MentorSession {
   messages: MentorMessage[];
   isActive: boolean;
   createdAt: Date;
+}
+
+export type MentorRole = 'director' | 'writer' | 'dp' | 'editor';
+export type AgentStatus = 'idle' | 'thinking' | 'speaking' | 'analyzing';
+
+export interface AcademyMentor {
+  id: string;
+  name: string;
+  role: MentorRole;
+  avatar: string;
+  bio: string;
+  agentId: string; // OpenFang Agent ID
+  status: AgentStatus;
 }

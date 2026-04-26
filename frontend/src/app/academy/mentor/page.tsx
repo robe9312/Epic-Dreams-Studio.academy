@@ -13,18 +13,26 @@ interface Message {
 }
 
 export default function MentorPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'ai',
-      content: '¡Hola! Soy tu mentor IA de Epic Dreams Academy. ¿En qué puedo ayudarte hoy con tu aprendizaje de cine?',
-      timestamp: new Date()
-    }
-  ]);
+  const { 
+    mentorSessions, 
+    startMentorSession, 
+    sendMessageToMentor,
+    isLoading 
+  } = useAcademyStore();
+  
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [activeRole, setActiveRole] = useState<'director' | 'writer' | 'dp' | 'editor'>('director');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize session if needed
+  useEffect(() => {
+    if (!mentorSessions['global']?.[activeRole]) {
+      startMentorSession('global', activeRole);
+    }
+  }, [activeRole, mentorSessions, startMentorSession]);
+
+  const currentSession = mentorSessions['global']?.[activeRole] || { messages: [], status: 'idle' };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,60 +40,15 @@ export default function MentorPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
-
-  const simulateAIResponse = async (userMessage: string) => {
-    setIsTyping(true);
-    
-    // Simular tiempo de "pensamiento" de la IA
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-    
-    // Respuestas contextuales básicas (en producción esto iría a la API de IA)
-    let response = '';
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('plano') || lowerMessage.includes('cámara')) {
-      response = 'Los planos cinematográficos son fundamentales para contar historias. Te recomiendo:\n\n1. **Plano General**: Muestra el entorno completo\n2. **Plano Medio**: Desde la cintura hacia arriba\n3. **Primer Plano**: Rostro completo\n4. **Plano Detalle**: Parte específica del cuerpo u objeto\n\n¿Te gustaría que profundicemos en alguno?';
-    } else if (lowerMessage.includes('iluminación') || lowerMessage.includes('luz')) {
-      response = 'La iluminación es clave en el cine. Los tres puntos básicos son:\n\n🎬 **Luz Principal (Key Light)**: La fuente principal\n💡 **Luz de Relleno (Fill Light)**: Suaviza sombras\n✨ **Luz Trasera (Back Light)**: Separa al sujeto del fondo\n\n¿Quieres aprender sobre esquemas de iluminación específicos?';
-    } else if (lowerMessage.includes('guión') || lowerMessage.includes('historia')) {
-      response = 'Para escribir un buen guión, sigue esta estructura:\n\n**Acto 1** - Presentación (25%)\n- Presenta personajes y mundo\n- Incidente incitador\n\n**Acto 2** - Confrontación (50%)\n- Obstáculos crecientes\n- Punto medio\n\n**Acto 3** - Resolución (25%)\n- Clímax\n- Desenlace\n\n¿Te ayudo con alguna escena específica?';
-    } else if (lowerMessage.includes('edición') || lowerMessage.includes('cortar')) {
-      response = 'La edición es donde la película realmente se hace. Consejos clave:\n\n✂️ **Ritmo**: Varía la duración de planos\n🎯 **Continuidad**: Mantén coherencia visual\n🎵 **Música y sonido**: Guía las emociones\n⚡ **Transiciones**: Úsalas con propósito\n\n¿Hay alguna técnica de edición que quieras dominar?';
-    } else if (lowerMessage.includes('color') || lowerMessage.includes('grading')) {
-      response = 'El color grading transforma completamente una película:\n\n🎨 **Corrección de color**: Balance y exposición\n🌈 **Grading creativo**: Estilo y atmósfera\n📊 **Curvas y ruedas**: Herramientas principales\n\nRecursos recomendados:\n- DaVinci Resolve (gratis)\n- Tutoriales de Color Grading Central\n\n¿Quieres ejercicios prácticos?';
-    } else if (lowerMessage.includes('ia') || lowerMessage.includes('inteligencia artificial')) {
-      response = '¡La IA está revolucionando el cine! En Epic Dreams Studio puedes:\n\n🤖 **Generar storyboards** con FLUX.1\n🎵 **Crear música** con MusicGen\n📝 **Desarrollar guiones** con Llama 3.3\n🎬 **Producir videos** con modelos de video IA\n\n¿Quieres que te muestre cómo usar alguna herramienta específica?';
-    } else if (lowerMessage.includes('gracias') || lowerMessage.includes('ayuda')) {
-      response = '¡Es un placer ayudarte! 🎬\n\nRecuerda que estoy aquí para:\n- Resolver dudas de teoría cinematográfica\n- Explicar técnicas específicas\n- Recomendarte recursos\n- Guiarte en tus proyectos\n\n¿En qué más puedo asistirte?';
-    } else {
-      response = 'Interesante pregunta. Déjame darte una respuesta útil:\n\nEn cine, cada decisión creativa debe servir a la historia. Ya sea elección de planos, iluminación, edición o color, pregúntate siempre:\n\n❓ **¿Esto ayuda a contar mejor la historia?**\n❓ **¿Esto transmite la emoción correcta?**\n❓ **¿Esto mantiene la coherencia visual?**\n\n¿Puedes contarme más sobre qué estás trabajando específicamente?';
-    }
-    
-    setIsTyping(false);
-    
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      sender: 'ai',
-      content: response,
-      timestamp: new Date()
-    }]);
-  };
+  }, [currentSession.messages]);
 
   const handleSend = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || currentSession.status === 'thinking') return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'user',
-      content: inputValue.trim(),
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const message = inputValue.trim();
     setInputValue('');
     
-    await simulateAIResponse(userMessage.content);
+    await sendMessageToMentor('global', activeRole, message);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -105,10 +68,10 @@ export default function MentorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 flex flex-col">
-      {/* Header */}
+      {/* Header with Role Switcher */}
       <div className="border-b border-gray-800/50 backdrop-blur-sm sticky top-0 z-50 bg-gray-950/80">
         <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                 <Bot className="w-6 h-6 text-white" />
@@ -117,6 +80,23 @@ export default function MentorPage() {
                 <h1 className="text-xl font-bold text-white">Mentor IA</h1>
                 <p className="text-sm text-gray-400">Tu guía personal de cine</p>
               </div>
+            </div>
+
+            {/* Role Switcher */}
+            <div className="flex bg-gray-900/50 p-1 rounded-lg border border-gray-800">
+              {(['director', 'writer', 'dp', 'editor'] as const).map((role) => (
+                <button
+                  key={role}
+                  onClick={() => setActiveRole(role)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    activeRole === role
+                      ? 'bg-purple-600 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  {role.toUpperCase()}
+                </button>
+              ))}
             </div>
             
             <a
@@ -130,11 +110,10 @@ export default function MentorPage() {
         </div>
       </div>
 
-      {/* Área de Mensajes */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="space-y-6">
-            {messages.map((message) => (
+            {currentSession.messages.map((message) => (
               <motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -162,7 +141,7 @@ export default function MentorPage() {
                 }`}>
                   <div className={`inline-block px-5 py-3 rounded-2xl ${
                     message.sender === 'ai'
-                      ? 'bg-gray-800/80 backdrop-blur-sm text-gray-100 rounded-tl-none'
+                      ? 'bg-gray-800/80 backdrop-blur-sm text-gray-100 rounded-tl-none border border-gray-700/50'
                       : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-tr-none'
                   }`}>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -170,7 +149,7 @@ export default function MentorPage() {
                     </p>
                   </div>
                   <p className="text-xs text-gray-500 mt-2 px-2">
-                    {message.timestamp.toLocaleTimeString([], { 
+                    {new Date(message.timestamp).toLocaleTimeString([], { 
                       hour: '2-digit', 
                       minute: '2-digit' 
                     })}
@@ -180,7 +159,7 @@ export default function MentorPage() {
             ))}
 
             {/* Indicador de escritura */}
-            {isTyping && (
+            {currentSession.status === 'thinking' && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -246,7 +225,7 @@ export default function MentorPage() {
             />
             <button
               onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping}
+              disabled={!inputValue.trim() || currentSession.status === 'thinking'}
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-800 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all flex items-center gap-2"
             >
               <Send className="w-5 h-5" />

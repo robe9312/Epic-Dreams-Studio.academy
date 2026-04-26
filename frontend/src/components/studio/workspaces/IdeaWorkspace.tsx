@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Save, Send, Loader2, Workflow } from 'lucide-react';
-import { useTimelineStore } from '../../../store/useTimelineStore';
+import { useTimelineStore, Clip } from '../../../store/useTimelineStore';
 
 export const IdeaWorkspace: React.FC = () => {
     const [script, setScript] = useState('# Act 1\n\nINT. SPACE STATION - DAY\n\nA lonely astronaut looks through the window...\n\nEXT. DEEP SPACE - CONTINUOUS\n\nThe vastness of the universe unfolds.');
@@ -53,7 +53,7 @@ export const IdeaWorkspace: React.FC = () => {
             // Very basic simulation of OpenFang parsing scenes (e.g. separated by \n\n)
             const blocks = script.split('\n\n').filter(b => b.trim().length > 0);
             
-            const narrativeClips = [];
+            const narrativeClips: Clip[] = [];
             let currentTime = 0;
 
             blocks.forEach((block, idx) => {
