@@ -407,10 +407,11 @@ export const useTimelineStore = create<TimelineState>()(
     switch (entry.action.type) {
       case 'ADD_CLIP': {
         // Deshacer añadir = eliminar el clip
+        const { track, clip } = entry.action;
         set((s) => ({
           tracks: {
             ...s.tracks,
-            [entry.action.track]: s.tracks[entry.action.track].filter(c => c.id !== entry.action.clip.id)
+            [track]: s.tracks[track].filter(c => c.id !== clip.id)
           },
           historyIndex: state.historyIndex - 1
         }));
@@ -419,10 +420,11 @@ export const useTimelineStore = create<TimelineState>()(
 
       case 'REMOVE_CLIP': {
         // Deshacer eliminar = volver a añadir el clip
+        const { track, clip } = entry.action;
         set((s) => ({
           tracks: {
             ...s.tracks,
-            [entry.action.track]: [...s.tracks[entry.action.track], entry.action.clip].sort((a, b) => a.startTime - b.startTime)
+            [track]: [...s.tracks[track], clip].sort((a, b) => a.startTime - b.startTime)
           },
           historyIndex: state.historyIndex - 1
         }));
@@ -471,10 +473,11 @@ export const useTimelineStore = create<TimelineState>()(
     switch (nextEntry.action.type) {
       case 'ADD_CLIP': {
         // Rehacer añadir = volver a añadir el clip
+        const { track, clip } = nextEntry.action;
         set((s) => ({
           tracks: {
             ...s.tracks,
-            [nextEntry.action.track]: [...s.tracks[nextEntry.action.track], nextEntry.action.clip].sort((a, b) => a.startTime - b.startTime)
+            [track]: [...s.tracks[track], clip].sort((a, b) => a.startTime - b.startTime)
           },
           historyIndex: state.historyIndex + 1
         }));
@@ -483,10 +486,11 @@ export const useTimelineStore = create<TimelineState>()(
 
       case 'REMOVE_CLIP': {
         // Rehacer eliminar = volver a eliminar el clip
+        const { track, clip } = nextEntry.action;
         set((s) => ({
           tracks: {
             ...s.tracks,
-            [nextEntry.action.track]: s.tracks[nextEntry.action.track].filter(c => c.id !== nextEntry.action.clip.id)
+            [track]: s.tracks[track].filter(c => c.id !== clip.id)
           },
           historyIndex: state.historyIndex + 1
         }));
