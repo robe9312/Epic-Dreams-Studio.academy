@@ -17,26 +17,29 @@ export default async function AuthButton() {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="flex flex-col items-end">
-        <span className="text-[10px] font-bold text-white uppercase tracking-wider">{session.user.name}</span>
-        <span className="text-[8px] text-gray-500 font-mono">AUTHORIZED_PERSONNEL</span>
+    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md border border-white/10 p-1.5 pr-3 rounded-full hover:bg-white/10 transition-all group">
+      <div className="relative">
+        {session.user.image ? (
+          <img src={session.user.image} alt="User Avatar" className="w-8 h-8 rounded-full border border-red-500/50" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-purple-700 flex items-center justify-center border border-white/20">
+            <UserIcon size={14} className="text-white" />
+          </div>
+        )}
+        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-[#050505] rounded-full" />
+      </div>
+
+      <div className="flex flex-col">
+        <span className="text-[9px] font-bold text-white uppercase tracking-wider leading-none">{session.user.name}</span>
+        <span className="text-[7px] text-red-500 font-mono font-bold tracking-[0.2em] mt-0.5">STUDIO_STAFF</span>
       </div>
       
-      {session.user.image ? (
-        <img src={session.user.image} alt="User Avatar" className="w-8 h-8 rounded-full border border-red-500/50 shadow-lg shadow-red-500/20" />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center border border-white/20">
-          <UserIcon size={16} />
-        </div>
-      )}
-
       <form action={async () => {
         "use server";
         await signOut();
-      }}>
-        <button type="submit" className="p-2 text-gray-500 hover:text-red-500 transition-colors" title="Sign Out">
-          <LogOut size={16} />
+      }} className="ml-2 pl-2 border-l border-white/10">
+        <button type="submit" className="p-1 text-gray-500 hover:text-red-500 transition-colors" title="Cerrar Sesión">
+          <LogOut size={14} />
         </button>
       </form>
     </div>

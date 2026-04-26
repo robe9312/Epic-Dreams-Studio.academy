@@ -254,7 +254,7 @@ async def update_production_clip(clip_id: str, data: Dict[str, Any], api_key: st
     if not success: raise HTTPException(status_code=500, detail="DB Update failed")
     return {"status": "success", "clip_id": clip_id}
 # --- ACADEMY MENTOR ---
-@app.post(/"api/v1/academy/mentor/chat/")
+@app.post("/api/v1/academy/mentor/chat/")
 async def mentor_chat(payload: MentorChatRequest):
     mentor = MentorAgent(role=payload.role)
     result = await mentor.run_chat(
@@ -265,23 +265,23 @@ async def mentor_chat(payload: MentorChatRequest):
     )
     return result
 
-@app.get(/"api/v1/academy/mentor/stream/")
+@app.get("/api/v1/academy/mentor/stream/")
 async def stream_mentor_chat(
     message: str, 
-    role: str = /"director/", 
-    user_id: str = /"anonymous/",
+    role: str = "director", 
+    user_id: str = "anonymous",
     api_key: str = Depends(verify_api_key)
 ):
     mentor = MentorAgent(role=role)
-    identity = mentor.identities.get(role, mentor.identities[/"director/"])
+    identity = mentor.identities.get(role, mentor.identities["director"])
     
     groq = GroqClient()
     
     return StreamingResponse(
         groq.stream_chat(
-            prompt=f/"Estudiante: {message}\n\n{identity['name']}:/",
-            system_prompt=identity[/"system_prompt/"]
+            prompt=f"Estudiante: {message}\n\n{identity['name']}:",
+            system_prompt=identity["system_prompt"]
         ),
-        media_type=/"text/event-stream/",
-        headers={/"Cache-Control/": /"no-cache/", /"X-Accel-Buffering/": /"no/"}
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 )

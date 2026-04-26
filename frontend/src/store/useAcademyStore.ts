@@ -352,8 +352,8 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
 
     try {
       // 2. Llamar al backend
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiBase}/api/v1/academy/mentor/chat`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBase}/api/v1/academy/mentor/chat/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
