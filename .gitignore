@@ -52,4 +52,8 @@ build/
 
 # Target directories (Rust, etc.)
 target/
+
+# OpenFang Agent OS
+.openfang/
+openfang-data/
 ```
