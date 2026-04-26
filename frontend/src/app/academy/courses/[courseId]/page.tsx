@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useAcademyStore } from '@/stores/useAcademyStore';
+import { useAcademyStore } from '@/store/useAcademyStore';
+// Bulletproof relative path as fallback if alias fails during build
+// import { useAcademyStore } from '../../../../store/useAcademyStore';
 import { 
   Play, CheckCircle, Lock, ChevronDown, ChevronRight, 
   FileText, HelpCircle, Film, ArrowLeft, Award 

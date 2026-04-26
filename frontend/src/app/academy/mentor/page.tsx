@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Bot, User, Sparkles, X } from 'lucide-react';
-import { useAcademyStore } from '@/stores/useAcademyStore';
+import { useAcademyStore } from '@/store/useAcademyStore';
 
 interface Message {
   id: string;

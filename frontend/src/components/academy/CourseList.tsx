@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { useAcademyStore } from '@/stores/useAcademyStore';
+import { useAcademyStore } from '@/store/useAcademyStore';
 import { BookOpen, Play, Award, Clock, Users, Star, ChevronRight, Lock } from 'lucide-react';
 
 const CourseCard = ({ course, progress }: { course: any; progress?: number }) => {
