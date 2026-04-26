@@ -1,0 +1,55 @@
+name: "🌐 Deploy Frontend → Vercel"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Only trigger Vercel deploy when frontend or workflows change
+      - "frontend/**"
+      - ".github/workflows/vercel_deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment config
+        run: |
+          vercel pull --yes \
+            --environment=production \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend
+
+      - name: Build project artifacts
+        run: |
+          vercel build --prod \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend
+
+      - name: Deploy to Vercel (Production)
+        run: |
+          vercel deploy --prebuilt --prod \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            | tee deploy_url.txt
+          echo "🚀 Deployed to: $(cat deploy_url.txt)"
+        working-directory: frontend
+
+      - name: Post deployment URL to summary
+        run: |
+          echo "## 🚀 Vercel Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** $(cat frontend/deploy_url.txt)" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY

@@ -1,45 +1,62 @@
-name: Sync to Hugging Face hub
+name: "🚀 Deploy Backend → Hugging Face Space"
+
 on:
   push:
     branches: [main]
     paths:
-      - 'backend*/**'
-      - '.github/workflows/hf_deploy.yml'
+      - "backend(FastAPI+Python)/**"
+      - ".github/workflows/hf_deploy.yml"
   workflow_dispatch:
 
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository (full history + LFS)
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
 
-      - name: Push to hub
+      - name: Install git-lfs
+        run: |
+          sudo apt-get install -y git-lfs
+          git lfs install
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "arangorobe380@gmail.com"
+          git config --global user.name "Epic Dreams CI"
+
+      - name: Clone Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config --global user.email "arangorobe380@gmail.com"
-          git config --global user.name "Robe Arango"
-          
-          # Clonar con el token
-          git clone https://robe9312:$HF_TOKEN@huggingface.co/spaces/epicdreams/epic-dreams-backend hf_space
-          
-          # Limpiar Space
-          find hf_space -maxdepth 1 ! -name "hf_space" ! -name ".git" -exec rm -rf {} +
-          
-          # Copiar usando wildcard para evitar problemas con paréntesis
-          cp -rv backend*/* hf_space/
-          
+          git clone https://robe9312:${HF_TOKEN}@huggingface.co/spaces/epicdreams/epic-dreams-backend hf_space
+
+      - name: Sync backend files to Space
+        run: |
+          # Remove everything except .git in the Space clone
+          find hf_space -maxdepth 1 \
+            ! -path "hf_space" \
+            ! -path "hf_space/.git" \
+            -exec rm -rf {} +
+
+          # Copy backend using shell variable to handle the parentheses in folder name
+          BACKEND_DIR="backend(FastAPI+Python)"
+          cp -rv "${BACKEND_DIR}/." hf_space/
+
+      - name: Commit and push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
           cd hf_space
-          git add .
-          
+          git add -A
+
           if git diff --staged --quiet; then
-            echo "Sin cambios para desplegar."
+            echo "✅ No changes to deploy."
           else
-            git commit -m "Deploy robusto (wildcard path): $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin main --force
+            git commit -m "ci: auto-deploy backend @ $(date -u +'%Y-%m-%d %H:%M UTC') [sha: ${{ github.sha }}]"
+            git push https://robe9312:${HF_TOKEN}@huggingface.co/spaces/epicdreams/epic-dreams-backend main --force
+            echo "🚀 Backend deployed successfully to Hugging Face."
           fi
-          echo "Despliegue finalizado."
